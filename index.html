@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÔN THI TRÁCH NGHIỆM PLĐC VIP PRO</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --error: #dc2626;
+            --warning: #d97706;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
+            min-height: 100vh;
+            color: var(--text); 
+            margin: 0; 
+            padding: 40px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            line-height: 1.5;
+        }
+        
+        .container { width: 100%; max-width: 800px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-left h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+        .subtitle { font-size: 0.85rem; color: #64748b; font-weight: 500; display: block; margin-top: 4px; }
+        
+        .google-btn { 
+            display: flex; align-items: center; gap: 8px; background: white; border: 1px solid var(--border); 
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.9rem; 
+            transition: all 0.15s ease; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .google-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .google-btn img { width: 20px; height: 20px; border-radius: 50%; display: none; }
+        .google-btn svg { width: 16px; height: 16px; }
+
+        .mode-selector { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .mode-btn { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: all 0.15s ease; color: #475569; }
+        .mode-btn:hover { background: #f8fafc; color: var(--text); }
+        .mode-btn.active { background: var(--text); color: white; border-color: var(--text); }
+
+        .quiz-card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); padding: 40px; }
+        
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .progress { color: #64748b; font-size: 0.9rem; font-weight: 500; }
+        
+        .jump-container { display: flex; align-items: center; gap: 8px; }
+        .jump-input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; width: 70px; text-align: center; font-size: 0.9rem; outline: none; }
+        .jump-input:focus { border-color: var(--primary); }
+        
+        .timer { font-family: monospace; font-size: 1rem; font-weight: 600; color: var(--text); display: none; }
+        
+        .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 24px; color: var(--text); }
+        
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; text-align: left; color: var(--text); line-height: 1.4; }
+        .option:hover:not(:disabled) { border-color: var(--primary); background: #f0f9ff; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        
+        .option.correct { background: #f0fdf4 !important; border-color: var(--success) !important; color: #166534; }
+        .option.incorrect { background: #fef2f2 !important; border-color: var(--error) !important; color: #991b1b; }
+        .option.selected-exam { background: #eff6ff; border-color: var(--primary); color: #1e3a8a; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        button.action-btn { background: white; color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 6px; font-size: 0.95rem; cursor: pointer; font-weight: 500; transition: all 0.15s ease; }
+        button.action-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        button.action-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+        
+        button.primary-btn { background: linear-gradient(to right, #1e293b, #334155); color: white; border-color: transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button.primary-btn:hover:not(:disabled) { background: #0f172a; border-color: #0f172a; }
+
+        .results-container { text-align: center; display: none; padding: 40px; }
+        .score-display { font-size: 3rem; font-weight: 800; color: var(--text); margin: 20px 0; letter-spacing: -1px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .close-btn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; color: #94a3b8; line-height: 1; }
+        .close-btn:hover { color: var(--text); }
+        
+        .tabs { display: flex; gap: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .tab-btn { background: none; border: none; font-size: 0.95rem; font-weight: 500; color: #64748b; cursor: pointer; padding: 0 0 12px 0; position: relative; }
+        .tab-btn.active { color: var(--text); }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background-color: var(--text); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .leaderboard-item, .history-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .leaderboard-item:last-child, .history-item:last-child { border-bottom: none; }
+        
+        .rank { font-size: 1rem; font-weight: 600; color: #94a3b8; width: 30px; }
+        .rank-1 { color: #eab308; }
+        .rank-2 { color: #94a3b8; }
+        .rank-3 { color: #b45309; }
+        
+        .lb-info { flex: 1; display: flex; flex-direction: column; }
+        .lb-name { font-weight: 500; font-size: 0.95rem; color: var(--text);}
+        .lb-time { color: #94a3b8; font-size: 0.8rem; }
+        .lb-score { font-weight: 600; color: var(--text); font-size: 1rem;}
+
+        .wrong-q-item { padding: 16px 0; border-bottom: 1px solid #f1f5f9; text-align: left; }
+        .wrong-q-item:last-child { border-bottom: none; }
+        .wrong-q-title { font-weight: 500; color: var(--text); margin-bottom: 8px; font-size: 0.95rem; line-height: 1.4;}
+        .wrong-q-user { color: #dc2626; font-size: 0.85rem; margin-bottom: 4px;}
+        .wrong-q-correct { color: #16a34a; font-weight: 500; font-size: 0.85rem; }
+        
+        .empty-state { text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 20px 0; }
+        
+        .simple-link { background: none; border: none; color: #dc2626; font-size: 0.85rem; cursor: pointer; padding: 0; text-decoration: underline; margin-bottom: 16px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>ÔN THI TRÁCH NGHIỆM PLĐC</h1>
+                <span class="subtitle">25DTN - DNTU</span>
+            </div>
+            <div class="header-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                <button class="google-btn" id="btn-login" onclick="window.handleLogin()">
+                    <svg id="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <img id="user-avatar" src="" alt="avatar">
+                    <span id="login-text">Đăng nhập</span>
+                </button>
+                <span style="font-size: 0.75rem; color: #64748b; font-style: italic;">(Đăng nhập để xem các câu sai, lịch sử)</span>
+            </div>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" id="btn-practice" onclick="window.switchMode('practice')">Luyện tập</button>
+            <button class="mode-btn" id="btn-exam" onclick="window.switchMode('exam')">Thi thử</button>
+            <button class="mode-btn" id="btn-shuffle" onclick="window.toggleShuffle()">Đảo câu hỏi</button>
+            <button class="mode-btn" onclick="window.openModal()" style="margin-left: auto;">Dữ liệu</button>
+        </div>
+
+        <div class="quiz-card" id="quiz-card">
+            <div class="quiz-header">
+                <span class="progress" id="progress">1 / ...</span>
+                <div class="jump-container">
+                    <input type="number" id="jump-input" class="jump-input" min="1" placeholder="Câu">
+                    <button class="action-btn" style="padding: 6px 12px; font-size: 0.85rem;" onclick="window.jumpToQuestion()">Đến</button>
+                </div>
+                <span class="timer" id="timer">00:00</span>
+            </div>
+            
+            <div class="question" id="question">Đang tải...</div>
+            <div class="options" id="options"></div>
+            
+            <div class="controls">
+                <button class="action-btn" id="btn-prev" onclick="window.prevQuestion()">Quay lại</button>
+                <button class="action-btn primary-btn" id="btn-next" onclick="window.nextQuestion()">Tiếp tục</button>
+            </div>
+        </div>
+
+        <div class="quiz-card results-container" id="results-card">
+            <h2 style="margin-top:0; font-weight:600;">Hoàn thành bài thi</h2>
+            <div class="score-display" id="score-display">0/0</div>
+            <p id="result-message" style="font-size: 1rem; color: #475569; margin-bottom: 30px;"></p>
+            <button class="action-btn primary-btn" onclick="window.restartQuiz()">Làm lại</button>
+        </div>
+    </div>
+
+    <!-- Data Modal -->
+    <div class="modal" id="data-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="window.closeModal()">✕</span>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="window.switchTab('leaderboard-tab', this)">Xếp hạng</button>
+                <button class="tab-btn" onclick="window.switchTab('history-tab', this)">Lịch sử</button>
+                <button class="tab-btn" onclick="window.switchTab('wrong-tab', this)">Câu sai</button>
+            </div>
+            
+            <div id="leaderboard-tab" class="tab-content active">
+                <div id="leaderboard-list">
+                    <p class="empty-state">Đang tải...</p>
+                </div>
+            </div>
+
+            <div id="history-tab" class="tab-content">
+                <div id="history-list"><p class="empty-state">Chưa có dữ liệu.</p></div>
+            </div>
+            
+            <div id="wrong-tab" class="tab-content">
+                <div id="wrong-list"><p class="empty-state">Chưa có dữ liệu.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        let app, auth, db, provider;
+        let currentUser = null;
+        let isFirebaseActive = false;
+
+        try {
+            if(firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                provider = new GoogleAuthProvider();
+                isFirebaseActive = true;
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('login-text').textContent = user.displayName;
+                        document.getElementById('google-icon').style.display = 'none';
+                        const avatar = document.getElementById('user-avatar');
+                        avatar.src = user.photoURL;
+                        avatar.style.display = 'block';
+                    } else {
+                        currentUser = null;
+                        document.getElementById('login-text').textContent = "Đăng nhập";
+                        document.getElementById('google-icon').style.display = 'block';
+                        document.getElementById('user-avatar').style.display = 'none';
+                    }
+                });
+            }
+        } catch (e) { console.error(e); }
+
+        window.handleLogin = async () => {
+            if (!isFirebaseActive) {
+                alert("Chưa cấu hình Firebase Config trong mã nguồn.");
+                return;
+            }
+            if (!currentUser) {
+                try { await signInWithPopup(auth, provider); } 
+                catch (error) { alert("Lỗi: " + error.message); }
+            } else {
+                if(confirm("Đăng xuất tài khoản?")) { await signOut(auth); }
+            }
+        };
+
+        // Lấy lại bộ data mẫu từ file ban đầu
+        const originalData = [{"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 1. Nhà nước xã hội chủ nghĩa đầu tiên trên thế giới ra đời ở:", "options": ["Nga", "Trung Quốc", "Việt Nam", "Anh"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 2. Nhà nước xã hội chủ nghĩa Việt Nam ra đời sau:", "options": ["Cách mạng tháng 8/1945", "Hoà bình lập lại ở miền Bắc năm 1954", "Hoà bình thống nhất đất nước sau ngày 30/4/1975", "Năm 1976"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 3. Bản chất của nhà nước Cộng hoà XHCN Việt Nam:", "options": ["Là nhà nước dân chủ, của dân, do dân và vì dân", "Đề cao quyền tự do cá nhân không hạn chế", "Chú trọng làm bạn với các nước tư bản", "Đề cao chủ nghĩa tư bản"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 4. Nguyên tắc hoạt động của bộ máy nhà nước cộng hòa xã hội chủ nghĩa Việt Nam là:", "options": ["Đặt dưới sự lãnh đạo của Đảng cộng sản, Tất cả quyền lực nhà nước đều thuộc về nhân dân, nhân dân tham gia đông đảo vào quản lý nhà nước, thực hiện tập trung dân chủ và tăng cường pháp chế", "Xây dựng nhà nước trong sạch và hiệu quả. Không ngừng tăng cường quan hệ hợp tác với các nước giàu để vay tiền, học tập kinh nghiệm phát triển đất nước", "Sẵn sàng làm bạn với bất cứ nước nào, không phân biệt chế độ chính trị, miễn là hai bên đều có lợi", "Quyền lực thuộc về giai cấp công nhân"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 5. Nguyên thủ quốc gia của nước CHXHCN Việt Nam là:", "options": ["Tổng bí thư", "Chủ tịch nước", "Chủ tịch quốc hội", "Thủ tướng chính phủ"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 6. Đặt ra thuế và thu thuế là:", "options": ["Chức năng, nhiệm vụ của Chính phủ", "Trách nhiệm của ngành thuế", "Thẩm quyền của Quốc hội", "Một trong những đặc trưng cơ bản của Nhà nước"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 7. Đặt ra pháp luật và buộc mọi thành viên trong xã hội phải thực hiện, đó là đặc trưng của:", "options": ["Nhà nước chiếm hữu nô lệ", "Nhà nước phong kiến và nhà nước tư sản", "Nhà nước xã hội chủ nghĩa", "Mọi nhà nước"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 8. Với tư cách là cơ quan quyền lực nhà nước cao nhất, Quốc hội thực hiện chức năng cơ bản nào sau đây?", "options": ["Chức năng lập pháp", "Chức năng tư pháp", "Chức năng hành pháp", "Chức năng xét xử"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 9. Nhà nước không tồn tại trong xã hội nào sau đây?", "options": ["Xã hội chiếm hữu nô lệ", "Xã hội phong kiến", "Xã hội Cộng sản nguyên thủy", "Chủ nghĩa tư bản"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 10. Theo quan điểm của chủ nghĩa Mác – Lênin, nguyên nhân chủ yếu làm xuất hiện Nhà nước là:", "options": ["Do nhu cầu của con người trong xã hội", "Do yêu cầu của hoạt động đắp đê, làm thủy lợi", "Do xã hội có sự phân chia giai cấp và đấu tranh giai cấp", "Do yêu cầu của hoạt động chống giặc ngoại xâm"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 11. Bản chất giai cấp của Nhà nước thể hiện:", "options": ["Nhà nước là một bộ máy trấn áp đặc biệt của giai cấp này đối với giai cấp khác", "Nhà nước là công cụ để bảo vệ an ninh, chính trị, trật tự, an toàn xã hội", "Nhà nước là một bộ máy để trấn áp những người chống đối nhân dân", "Là sự cưỡng chế"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 12. Bản chất xã hội của Nhà nước thể hiện:", "options": ["Nhà nước là công cụ sắc bén nhất để quản lý mọi mặt đời sống xã hội", "Nhà nước là một bộ máy trấn áp đặc biệt trong tay nhà cầm quyền", "Nhà nước là công cụ của đa số nhân dân lao động sử dụng để trấn áp thiểu số giai cấp bóc lột", "Nhà nước là bộ máy nhằm bảo đảm trật tự an toàn xã hội và đảm đương các công việc chung vì sự phát triển của xã hội"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 13. Dấu hiệu nào sau đây không phải là đặc trưng cơ bản của Nhà nước?", "options": ["A. Nhà nước phân chia dân cư theo lãnh thổ", "B. Nhà nước có chủ quyền Quốc gia", "C. Nhà nước điều chỉnh xã hội bằng các tập quán và đạo đức xã hội", "D. Nhà nước đặt ra thuế và tiến hành thu các loại thuế"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 14. Hình thức chính thể của Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam hiện nay là:", "options": ["Quân chủ", "Cộng hòa", "Cộng hòa dân chủ", "Quân chủ hạn chế"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 15. Kiểu Nhà nước đầu tiên trong lịch sử là:", "options": ["Nhà nước Tư sản", "Nhà nước phong kiến", "Nhà nước Chiếm hữu nô lệ", "Nhà nước Cộng sản nguyên thủy"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 16. Chủ tịch nước của nước Cộng Hoà xã hội chủ nghĩa Việt Nam theo Hiến pháp 2013 có quyền:", "options": ["Lập hiến và lập pháp", "Quyết định mọi vấn đề quan trọng của đất nước", "Thay mặt Nhà nước để quyết định mọi vấn đề đối nội và đối ngoại", "Thay mặt nhân dân ban hành hiến pháp"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 17. Hội đồng nhân dân các cấp là:", "options": ["Cơ quan hành chính Nhà nước ở địa phương", "Cơ quan quyền lực Nhà nước ở địa phương", "Cơ quan thường trực của Quốc hội", "Cơ quan quyền lực do Quốc hội bầu ra"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 18. \"Quyền lực của nhà nước về bản chất giống quyền lực của người đứng đầu trong gia đình\" là quan điểm của học thuyết nào?", "options": ["Thuyết bạo lực", "Thuyết gia trưởng", "Thuyết khế ước", "Thuyết thần học"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 19. \"Nhà nước là sự ký kết hợp tác của mọi thành viên trong xã hội sống trong trạng thái tự nhiên của con người\" là quan điểm của học thuyết nào?", "options": ["Thuyết bạo lực", "Thuyết gia trưởng", "Thuyết khế ước", "Thuyết thần học"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 20. \"Nhà nước là sự phát triển của gia đình và quyền gia trưởng\" là quan điểm của học thuyết nào?", "options": ["Thuyết bạo lực", "Thuyết gia trưởng", "Thuyết khế ước", "Thuyết thần học"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 21. Hội đồng nhân dân chịu trách nhiệm trước:", "options": ["Quốc hội và nhân dân", "Hội đồng nhân dân cấp trên và nhân dân địa phương", "Cơ quan quyền lực cấp trên và nhân dân địa phương", "Quốc hội và nhân dân địa phương"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 22. Ủy ban nhân dân chịu trách nhiệm trước:", "options": ["Chính phủ", "Quốc hội", "Nhân dân địa phương", "Hội đồng nhân dân cùng cấp"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 23. Đảng cộng sản Việt Nam là một:", "options": ["Tổ chức chính trị", "Hệ thống xã hội ở Việt Nam", "Tổ chức xã hội nghề nghiệp", "Cơ quan trong bộ máy nhà nước."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 24. Ủy ban nhân dân phường Trảng Dài do:", "options": ["A. Nhân dân phường Trảng Dài bầu ra", "B. Hội đồng Nhân dân phường Trảng Dài bầu ra", "C. Ủy ban nhân dân thành phố Biên Hòa bầu ra", "D. Ủy ban nhân dân tỉnh Đồng Nai bầu ra"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 1] Câu 25. Ủy ban nhân dân tỉnh Đồng Nai chịu trách nhiệm trước:", "options": ["A. Nhân dân tỉnh Đồng Nai", "B. Nhân dân cả nước", "C. Quốc hội", "D. Hội đồng nhân dân tỉnh Đồng Nai"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 1. Luật Giáo dục do cơ quan nào ban hành?", "options": ["Bộ giáo dục và đào tạo", "Quốc hội", "Bộ lao động thương binh và xã hội", "Chính phủ"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 2. Xét ở khía cạnh trình độ, ý thức pháp luật được chia thành hai loại:", "options": ["ý thức pháp luật thông thường và ý thức pháp luật mang tính lý luận", "ý thức pháp luật cá nhân và ý thức pháp luật nhóm", "ý thức pháp luật lịch sử và ý thức pháp luật hiện tại", "ý thức pháp luật thấp và ý thức pháp luật cao"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 3. Pháp luật được xem là?", "options": ["Những quy tắc ứng xử, xử sự chung của một quốc gia", "Là do con người tự nghĩ ra", "Là do kết quả của đấu tranh giai cấp", "Là một phần của đời sống xã hội"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 4. Pháp luật thể hiện ý chí của giai cấp nào sau đây?", "options": ["Mọi tầng lớp, giai cấp trong xã hội", "Giai cấp thống trị", "Giai cấp bị trị", "Ý muốn chủ quan của nhà nước"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 5. Lực lượng nào sau đây sẽ đảm bảo Pháp luật được thực hiện?", "options": ["Nhà nước", "Giai cấp thống trị", "Giai cấp bị trị.", "Lực lượng công an, quân đội"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 6. Xét về mặt khách quan, Pháp luật ra đời là do?", "options": ["Chế độ tư hữu và đấu tranh giai cấp, cùng với sự ra đời của nhà nước", "Nhà nước ban hành pháp luật", "Do ý muốn chủ quan của con người", "Kết quả của những cuộc chiến tranh"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 7. Về mặt chủ quan, Pháp luật là do?", "options": ["Chế độ tư hữu và đấu tranh giai cấp, cùng với sự ra đời của nhà nước", "Nhà nước ban hành hoặc thừa nhận pháp luật", "Do ý muốn chủ quan của con người", "Kết quả của những cuộc chiến tranh"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 8. Pháp luật chỉ cách ứng xử mà mọi người phải tuân theo trong những trường hợp nhất định, là tính chất nào sau đây của Pháp luật?", "options": ["Tính cưỡng chế của Pháp luật", "Tính phổ biến", "Tính khách quan", "Tính tương đối ổn định"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 9. Văn bản pháp luật cấp dưới không được trái với văn bản cấp trên, là tính chất nào sau đây của Pháp luật?", "options": ["Tính cưỡng chế", "Pháp Tính phổ biến", "Tính khách quan", "Tính xác định chặt chẽ về hình thức"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 10. Giữa pháp luật và kinh tế, thì:", "options": ["Kinh tế quyết định đến pháp luật", "Pháp luật quyết định đến kinh tế", "Pháp luật và kinh tế không phụ thuộc vào nhau", "Không ràng buộc nhau"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 11. Phương pháp điều chỉnh hành vi con người của Pháp luật và đạo đức, khác nhau ở chỗ:", "options": ["Pháp luật điều chỉnh bằng tính cưỡng chế, đạo đức bằng ý thức tự giác", "Pháp luật điều chỉnh bằng hình phạt, còn đạo đức điều chỉnh bằng sự phê phán", "Pháp luật điều chỉnh bằng cơ quan nhà nước, đạo đức điều chỉnh bằng xã hội", "Pháp luật thì có thời hạn xét sử, còn đạo đức thì không."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 12. Để quản lý xã hội, thời kỳ phong kiến Trung Quốc đã sử dụng học thuyết nào sau đây là chủ yếu?", "options": ["Phật giáo", "Nho giáo", "Đạo giáo", "Chủ nghĩa mác xít"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 13. Đặc điểm chung trong việc quản lý xã hội của các học thuyết Nho giáo, Đạo giáo, Phật giáo lấy yếu tố nào làm nòng cốt?", "options": ["Nhân nghĩa", "Pháp luật", "Ý thức cá nhân", "Ý thức tập thể"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 14. Pháp luật không có ở chế độ nào sau đây?", "options": ["Cộng sản nguyên thủy", "Chiếm hữu nô lệ", "Phong kiến", "Tư bản chủ nghĩa"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 15. Bản chất của Pháp luật là?", "options": ["Là hệ thống các văn bản, các quy phạm pháp luật", "Biểu hiện ý chí của giai cấp thống trị", "Là cơ sở để quản lý xã hội", "Là một hình thái ý thức xã hội của con người"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 16. Chức năng nào KHÔNG phải là chức năng của pháp luật:", "options": ["Chức năng điều chỉnh các quan hệ xã hội", "Chức năng xây dựng và bảo vệ tổ quốc", "Chức năng bảo vệ các quan hệ xã hội", "Chức năng giáo dục"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 17. Các thuộc tính của pháp luật là:", "options": ["Tính bắt buộc chung (hay tính quy phạm phổ biến)", "Tính xác định chặt chẽ về mặt hình thức", "Tính bắt buộc chung (hay tính quy phạm phổ biến); Tính xác định chặt chẽ về mặt hình thức", "Thuộc tính xác định về nội dung"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 18. Theo quan điểm của chủ nghĩa Mác – Lênin, nhà nước và pháp luật là hai hiện tượng xã hội:", "options": ["Cùng phát sinh, phát triển, cùng tồn tại và tiêu vong.", "Luôn luôn phát sinh, phát triển và tồn tại cùng với xã hội loài người", "Nhà nước có thể bị tiêu vong còn pháp luật thì tồn tại mãi mãi", "Pháp luật có thể bị mất đi còn nhà nước thì cùng tồn tại với xã hội loài người"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 19. Thuộc tính (đặc trưng) nào sau đây là của pháp luật:", "options": ["Tính bắt buộc chung (tính quy phạm phổ biến)", "Bảo vệ các quan hệ xã hội", "Điều chỉnh các quan hệ xã hội", "Tính xác định chặt chẽ"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 20. Chức năng nào sau đây là của Pháp luật", "options": ["Bảo vệ các quan hệ xã hội", "Tính được đảm bảo thực hiện bằng nhà nước", "Áp đặt các quan hệ xã hội", "Tính xác định chặt chẽ"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 21. Chức năng nào sau đây là của Pháp luật", "options": ["Giáo dục hành vi con người", "Tính được đảm bảo thực hiện bằng nhà nước", "Giác ngộ", "Tác động"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 22. Pháp luật là quy tắc xử sự chung, được áp dụng đối với tất cả mọi người là thể hiện đặc trưng nào dưới đây của pháp luật?", "options": ["Tính quy phạm phổ biến.", "Tính phổ cập.", "Tính rộng rãi.", "Tính nhân văn."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 23. Pháp luật không quy định về những việc nào dưới đây ?", "options": ["Nên làm", "Được làm.", "Phải làm", "Không được làm."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 24. Một trong những đặc trưng của pháp luật thể hiện ở", "options": ["Tính quyền lực, bắt buộc chung.", "Tính hiện đại.", "Tính cơ bản", "Tính truyền thống."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 25. Để quản lí xã hội, Nhà nước cần sử dụng phương tiện quan trọng nhất nào dưới đây?", "options": ["Pháp luật", "Giáo dục.", "Thuyết phục", "Tuyên truyền."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 26. Các quy phạm pháp luật do Nhà nước ban hành phù hợp với lợi ích của giai cấp cầm quyền là thể hiện bản chất nào dưới đây của phâp luật?", "options": ["Bản chất xã hội.", "Bản chất giai cấp.", "Bản chất nhân dân.", "Bản chất dân tộc."], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 27. Pháp luật có tính quyền lực, bắt buộc chung, nghĩa là quy định bắt buộc đối với:", "options": ["Mọi người từ 20 tuổi trở lên.", "Mọi cá nhân tổ chức.", "Mọi đối tượng cần thiết.", "Mọi cán bộ, công chức."], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 28. Pháp luật phản ánh những nhu cầu, lợi ích của giai cấp, tầng lớp khác nhau trong xã hội là thể hiện bản chất nào dưới đây của pháp luật?", "options": ["Bản chất xã hội.", "Bản chất giai cấp.", "Bản chất nhân dân.", "Bản chất hiện đại."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 29. Luật Hôn nhân và gia đình năm 2014 quy định nam, nữ khi kết hôn với nhau phải tuân theo điều kiện: “Việc kết hôn phải được đăng kí và do cơ quan nhà nước có thẩm quyền thực hiện”, là thể hiện đặc trưng nào dưới đây của pháp luật ?", "options": ["Tính nghiêm túc.", "Tính quy phạm phổ biến.", "Tính nhân dân và xã hội.", "Tính quần chúng rộng rãi."], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 30. Khoản 2 Điều 69 Luật Hôn nhân và gia đình năm 2014 quy định về nghĩa vụ của cha ẹ: “Trông nom, nuôi dưỡng, chăm sóc, bảo vệ quyền và lợi ích hợp pháp của con chưa thành niên” là thể hiện mối quan hệ giữa pháp luật với:", "options": ["Kinh tế", "Đạo đức.", "Chính trị", "Văn hóa."], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 2] Câu 31. Pháp luật có vai trò như thế nào đối với công dân ?", "options": ["Bảo vệ quyền tự do tuyệt đối của công dân", "Bảo vệ quyền và lợi ích hợp pháp của công dân.", "Bảo vệ lợi ích của công dân.", "Bảo vệ mọi nhu cầu của công dân."], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 1. Văn bản quy phạm pháp luật có hiệu lực cao nhất, các văn bản quy phạm pháp luật khác không được trái với nó, đó chính là:", "options": ["Bộ luật hình sự", "Luật tổ chức Quốc hội", "Hiến pháp", "Luật tổ chức Chính phủ"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 2. Pháp lệnh do ai hoặc cơ quan nào ban hành?", "options": ["Chủ tịch nước", "Chính phủ", "Quốc hội", "Ủy ban thường vụ Quốc hội"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 3. Chỉ thị do cơ quan nào ban hành?", "options": ["Ủy ban nhân dân", "Hội đồng nhân dân", "Chính phủ", "Bộ"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 4. Hiến pháp năm 2013 có hiệu lực thi hành từ thời gian nào?", "options": ["01/01/2013", "01/01/2014", "01/7/2013", "01/7/2014"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 5. Khái niệm “Hình thức pháp luật” dùng để chỉ:", "options": ["Ngôn ngữ, nội dung của pháp luật", "Những dạng tồn tại thực tế của pháp luật", "Là cách thức thực hiện pháp luật", "Là tên gọi của các văn bản quy phạm pháp"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 6. Hình thức pháp luật là hoạt động nào sau đây:", "options": ["Ban hành nhiều văn bản pháp luật khác", "Thực hiện nhiều văn bản pháp luật", "Kiểm tra, giám sát việc thực hiện pháp luật", "Hợp pháp hóa trong các hoạt động làm luật và ban hành pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 7. Trong hoạt động xét xử của tòa án, Tòa án sẽ sử dụng hình thức pháp luật chính nào sau đây?", "options": ["Các điều ước quốc tế", "Tiền lệ pháp", "Tập quán pháp", "Văn bản quy phạm pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 8. Cơ sở để hình thành các Công ước quốc tế là?", "options": ["Học tập làm luật giữa các nước", "Tất cả các quốc gia đều có mối quan hệ với nhau từ song phương tới đa phương", "Các khối nước liên hệ với nhau", "Tôn trọng nhau"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 9. Tòa án chỉ sử dụng các công ước quốc tế khi:", "options": ["Quốc gia đó đã ký kết tuân thủ các Công ước trên phạm vi lãnh thổ của mình", "Được các nước khác đồng ý sử dụng", "Được nhân dân đồng ý sử dụng", "Điều kiện cấp bách"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 10. Ban hành pháp luật thành văn bản, do cơ quan nhà nước có thẩm quyền ban hành là đặc điểm của hình thức pháp luật nào sau đây?", "options": ["Các điều ước quốc tế", "Tiền lệ pháp", "Tập quán pháp", "Văn bản quy phạm pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 11. Hình thức pháp luật nào hiện nay được coi là hình thức pháp luật chủ yếu của mọi nhà nước, và được các Tòa án áp dụng trong công tác xét xử?", "options": ["Các điều ước quốc tế", "Tiền lệ pháp", "Tập quán pháp", "Văn bản quy phạm pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 12. Ở Việt Nam, hình thức pháp luật nào được xem là phương tiện quan trọng để thể hiện đường lối, chính sách của Đảng Cộng sản Việt Nam?", "options": ["Các điều ước quốc tế", "Tiền lệ pháp", "Tập quán pháp", "Văn bản quy phạm pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 13. Yếu tố nào sau đây được xem là linh hồn của các văn bản quy phạm pháp luật ở Việt Nam hiện nay?", "options": ["Nội dung, chữ viết của các văn bản quy phạm pháp luật", "Đường lối, chính sách của Đảng Cộng sản Việt Nam", "Phạm vi áp dụng của luật pháp", "Đối tượng áp dụng của pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 14. Ở Việt Nam những ngày như Tết nguyên đán, ngày rằm, các lễ hội được xem là?", "options": ["Tập quán pháp", "Tiền lệ pháp", "Tập quán", "Phong tục"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 15. Khái niệm “Tập quán pháp” dùng để chỉ:", "options": ["Những thói quen của một cộng đồng trong thời gian nhất định", "Những thói quen được hình thành từ đời sống làm khuôn mẫu điều chỉnh hành vi của con người", "Những tập quán có riêng ở một số vùng, lãnh thổ", "Pháp luật nhà nước"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 16. Dân tộc thái cấm phụ nữ vào gian thờ cúng tổ tiên là ví dụ về?", "options": ["Phong tục, tập quán", "Thói quen truyền thống", "Tập quán pháp Luật", "Ý thức"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 17. Hạn chế của tập quán pháp là?", "options": ["Đặc trưng của địa phương, khó áp dụng cho địa phương khác", "Chưa có được sự nghiên cứu khoa học", "Chưa được ghi thành văn bản", "Chưa được luật pháp công nhận"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 18. Hình thức áp dụng cách giải quyết các vụ kiện dựa theo những vụ kiện chưa được nêu trong văn bản pháp luật, song đã từng giải quyết vụ kiện tương tự, hình thức pháp luật đó là?", "options": ["Tập quán pháp luận", "Tiền lệ pháp luận", "Tập quán", "Phong tục"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 19. Quốc hội được phép ban hành văn bản nào sau đây?", "options": ["Hiến Pháp, luật, nghị quyết Quốc hội,", "Lệnh, nghị quyết", "Nghị định", "Quyết định"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 20. Chủ tịch nước được phép ban hành văn bản pháp luật nào sau đây?", "options": ["Hiến Pháp, luật, nghị quyết Quốc hội,", "Lệnh, nghị quyết", "Nghị định", "D.Quyết định"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 21. Chính phủ được phép ban hành văn bản pháp luật nào sau đây?", "options": ["Hiến Pháp, luật, nghị quyết Quốc hội,", "Lệnh, nghị quyết", "Nghị định", "Quyết định"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 22. Thủ tướng chính phủ được phép ban hành văn bản pháp luật nào sau đây?", "options": ["Hiến Pháp, luật, nghị quyết Quốc hội,", "Lệnh, nghị quyết", "Nghị định", "Quyết định"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 23. Văn bản luật là những văn bản nào sau đây?", "options": ["Hiến Pháp", "Luật", "Nghị quyết của Quốc hội", "Tất cả các đáp án trên"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 24. Văn bản nào là văn bản dưới luật trong những văn bản dưới đây?", "options": ["Hiến Pháp", "Luật", "Nghị quyết của Quốc hội", "Lệnh, Nghị quyết của Chủ tịch nước"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 25. Văn bản pháp luật nào được xem là “đạo luật mẹ” trong hệ thống văn bản pháp luật Việt Nam hiện nay?", "options": ["Hiến Pháp", "Luật", "Nghị quyết của Quốc hội", "Lệnh, Nghị quyết của Chủ tịch nước"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 26. Văn bản hướng dẫn thực hiện Hiến pháp và Pháp luật được gọi là?", "options": ["Hiến Pháp", "Luật", "Nghị quyết của Quốc hội", "Nghị định"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 27. Trong một số trường hợp, Nghị định hướng dẫn thi hành luật cũng chưa áp dụng được thực tiễn nên cần đến loại văn bản luật Hướng dẫn thi hành Nghị định do các Bộ thuộc Chính phủ ban hành, văn bản đó gọi là gì?", "options": ["Hiến Pháp Luật", "Nghị định", "Thông Tư hướng dẫn thi hành", "Nghị định"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 28. Nhận định nào sau đây là KHÔNG chính xác?", "options": ["Pháp luật chỉ có thể được hình thành bằng con đường ban hành của nhà nước.", "Pháp luật không phải là tiêu chí duy nhất để điều chỉnh hành vi con người", "Tiền lệ pháp là việc áp dụng một sự việc đã từng xảy ra", "Pháp luật sử dụng biện pháp cưỡng chế để thực hiện"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 3] Câu 29. Khẳng định nào sau đây là đúng:", "options": ["Tập quán pháp là tập quán được nhà nước thừa nhận", "Tập quán pháp là tập quán có thể được nhà nước thừa nhận hoặc không cần phải được nhà nước thừa nhận", "Tập quán pháp là tập quán có thể được nhà nước thừa nhận hoặc không cần phải được nhà nước thừa nhận; Tập quán pháp là tập quán được nhà nước thừa nhận", "Tập quán nhà nước không thừa nhận"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 1. Quy phạm pháp luật là:", "options": ["Quy tắc xử sự có tính bắt buộc chung do nhà nước ban hành và bảo đảm thực hiện", "Các nội quy do nhà nước đặt ra", "Các quy định do người nắm giữ quyền lực nhà nước đặt ra", "Do Chủ tịch nước ban hành"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 2. Quy phạm pháp luật là quy tắc xử sự cho phép cá nhân:", "options": ["Được làm bất cứ việc gì mình muốn", "Chỉ được làm những việc mà luật cho phép và không cấm", "Không được làm những việc có lợi cho nước ngoài", "Không được quyền góp ý"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 3. Bộ phận nào của Quy phạm pháp luật nêu lên cách thức xử sự của chủ thể?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 4. Tế bào nhỏ nhất trong hệ thống pháp luật là?", "options": ["Văn bản pháp luật", "Bộ luật", "Quy phạm pháp luật", "Ngành luật"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 5. Quy phạm xã hội được hiểu là?", "options": ["Quy phạm đạo đức", "Quy tắc ứng xử của con người trong cuộc sống", "Quy phạm pháp luật", "Quy tắc trong một quốc gia"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 6. Những quy tắc nào điều chỉnh các mối quan hệ xã hội của con người?", "options": ["Quy phạm đạo đức", "Quy phạm tôn giáo", "Quy phạm pháp luật", "Tất cả các đáp án trên"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 7. Quy phạm pháp luật được hiểu là?", "options": ["Những quy tắc xử sự có tính chất khuôn mẫu, bắt buộc mọi chủ thể phải tuân thủ", "Được biểu thị bằng hình thức nhất định", "Do nhà nước ban hành hoặc thừa nhận, được nhà nước bảo đảm thực hiện và có thể có cả các biện pháp cưỡng chế của nhà nước", "Tất cả các phương án trên"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 8. Những quy tắc hành vi được hình thành trong xã hội trên cơ sở quan niệm về đạo đức và được con người tự giác thực hiện, được gọi là quy phạm?", "options": ["Quy phạm đạo đức", "Quy phạm tôn giáo", "Quy phạm pháp luật", "Quy phạm xã hội"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 9. Các quy phạm do các tổ chức xã hội đặt ra, nó tồn tại và được thực hiện trong các tổ chức xã hội đó, được gọi là quy phạm?", "options": ["Quy phạm đạo", "Quy phạm tôn giáo", "Quy phạm pháp luật", "Quy phạm của các tổ chức xã hội"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 10. Sự khác nhau căn bản của quy phạm pháp luật so với các quy phạm khác là?", "options": ["Được nhà nước công nhận và đảm bảo thực hiện", "Được cụ thể bằng ngôn ngữ, văn bản", "Là quy phạm có đối tượng rộng lớn nhất", "Ưu việt hơn"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 11. Sự khác nhau căn bản giữa quy phạm đạo đức, phong tục tập quán so với quy phạm pháp luật thể hiện ở chỗ?", "options": ["Các quy phạm này có thời gian lâu dài hơn", "Đối tượng hẹp hơn", "Được hình thành một cách tự phát", "Mang ý chí chủ quan"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 12. Cơ sở nào để thực hiện các quy tắc đạo đức trong đời sống xã hội?", "options": ["Cưỡng chế", "Bạo lực", "Lòng tin của con người", "Giáo dục"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 13. Cơ sở nào để thực hiện các quy tắc của phong tục tập quán trong đời sống xã hội?", "options": ["Cưỡng chế", "Thói quen", "Lòng tin của con người", "Giáo dục"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 14. Cơ sở nào để thực hiện các quy tắc của quy phạm pháp luật trong đời sống xã hội?", "options": ["Cưỡng chế", "Thói quen", "Lòng tin của con người", "Giáo dục"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 15. Quy phạm pháp luật ra đời gắn liền với sự ra đời của?", "options": ["Xã hội loài người", "Pháp luật", "Nhà nước", "Con người"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 16. Đặc điểm của quy phạm pháp luật?", "options": ["Quy phạm pháp luật bao giờ cũng do nhà nước đặt ra hoặc được nhà nước thừa nhận", "Quy phạm pháp luật thừa nhận ý chí của giai cấp thống trị", "Có tính chất bắt buộc chung đối với mọi người trong những điều kiện nhất định", "Tất cả các đáp án trên"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 17. Các bộ phận cấu thành các quy phạm pháp luật, gồm?", "options": ["Chế tài – Giải thiết – Kết luận", "Giả thiết – giả định – chế tài", "Giả định – quy định – chế tài", "Giả thiết – quy định – chế tài"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 18. Nêu rõ hoàn cảnh, điều kiện cụ thể của cuộc sống mà khi hoàn cảnh, điều kiện đó xảy ra thì người ở trong hoàn cảnh đó phải xử sự theo quy định của pháp luật. Được gọi là bộ phận nào sau đây?", "options": ["Giả định", "Quy định", "Chế tài", "Chỉ thị"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 19. Dấu hiệu nhận biết: giả định thường trả lời các câu hỏi: Người (tổ chức) nào? Khi nào? Trong hoàn cảnh nào? Điều kiện nào? Là bộ phận nào của quy phạm pháp luật", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 20. Bộ phận nào nếu thiếu thì làm cho quy phạm pháp luật trở nên vô nghĩa?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 21. Nêu lên cách cư xử buộc người ta được làm hay không được làm, hoặc đã thực hiện những hành vi mà pháp luật cấm khi ở trong những hoàn cảnh, những điều kiện nào, được xem là bộ phận nào sau đây của quy phạm pháp luật?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 22. Bộ phận nào của quy phạm pháp luật nêu lên quyền và nghĩa vụ trong những điều kiện, hoàn cảnh cụ thể?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 23. Thông qua bộ phận nào, nhà nước xác định quyền và nghĩa vụ pháp lý của các chủ thể tham gia quan hệ xã hội mà quy phạm pháp luật điều chỉnh?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 24. Bộ phận nào trả lời những câu hỏi như: phải làm gì? Được làm gì? Không được làm gì? Làm như thế nào?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 25. Nêu biện pháp xử lý dự kiến sẽ áp dụng đối với những người đã xử sự không đúng hoặc làm trái quy định của nhà nước- trái với nội dung được quy định ở quy phạm pháp luật. Là bộ phận nào của quy phạm pháp luật?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 26. Bộ phận nào thường trả lời câu hỏi: hậu quả sẽ như thế nào nếu không làm đúng với quy định của nhà nước?", "options": ["Giả định", "Quy định", "Chế tài", "Giả thiết"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 27. Chế tài được hiểu là?", "options": ["Kết quả có lợi cho các chủ thể vi phạm pháp luật?", "Hậu quả bất lợi cho các chủ thể vi phạm pháp luật", "Là dấu hiệu khi xem xét các hành vi vi phạm pháp luật", "Là nguyên nhân để xảy ra các hành vi vi phạm pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 28. Mục đích của chế tài là?", "options": ["Trừng trị những người vi phạm pháp luật, làm cho họ có ý thức tôn trọng và chấp hành pháp luật.", "Ngăn ngừa các khả năng có thể vi phạm pháp luật.", "Trừng trị những người vi phạm pháp luật, làm cho họ có ý thức tôn trọng và chấp hành pháp luật; Ngăn ngừa các khả năng có thể vi phạm pháp luật.", "Tất cả đều sai"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 29. Trường hợp trong Điều luật chỉ có phần giả định và quy định, còn phần chế tài ở trong Điều luật khác, thậm chí trong các Bộ luật khác. Được gọi là?", "options": ["Gửi chế tài", "Quy định ẩn", "Chế tài ẩn", "Gửi quy định"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 30. Trường hợp trong điều luật, ta thấy quy phạm pháp luật chỉ có phần giả định và chế tài mà không thấy quy định. Trường hợp đó gọi là?", "options": ["Gửi chế tài", "Quy định ẩn", "Chế tài ẩn", "Gửi quy định"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 31. Điều 60 Luật Hôn nhân và Gia đình 2000: “Khi ly hôn, nếu một bên túng thiếu có yêu cầu cấp dưỡng mà có lý do chính đáng, thì bên kia có nghĩa vụ cấp dưỡng theo khả năng cấp dưỡng”. Đây là trường hợp nào sau đây?", "options": ["Gửi chế tài", "Quy định ẩn", "Chế tài ẩn", "Gửi quy định"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 32. Điều 29, Hiến pháp 1992 quy định: “Cơ quan Nhà nước, đơn vị vũ trang, tổ chức kinh tế, tổ chức xã hội, mọi cá nhân phải thực hiện các quy định của Nhà nước về sử dụng hợp lý tài nguyên thiên nhiên và bảo vệ môi trường”. Quy phạm pháp luật trên thuộc dạng nào sau đây?", "options": ["Gửi chế tài", "Quy định ẩn", "Chế tài ẩn", "Gửi quy định"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 33. Trong quy phạm pháp luật sau đây, đâu là Giả định? “Mọi công dân đều có quyền và nghĩa vụ học tập”?", "options": ["Mọi công dân", "Quyền và nghĩa vụ", "Mọi công dân, học tập", "D.Học tập"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 34. Khẳng định nào là đúng:", "options": ["Quy phạm đạo đức là quy phạm xã hội", "Quy phạm tập quán không phải là quy phạm xã hội", "Quy phạm pháp luật là khuôn mẫu cho hành vi một người", "Quy phạm pháp luật là khuôn mẫu cho hành vi của một tổ chức"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 35. Khẳng định nào là đúng:", "options": ["Quy phạm pháp luật là quy phạm xã hội", "Quy phạm tôn giáo không phải là quy phạm xã hội", "Quy phạm pháp luật là khuôn mẫu cho hành vi một người", "Quy phạm pháp luật là khuôn mẫu cho hành vi của một tổ chức"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 36. Đối với các quy phạm xã hội không phải là Quy phạm pháp luật, các chủ thể có phải tuân thủ không khi xử sự theo các quy phạm đó:", "options": ["Phải tuân thủ các quy tắc xử sự đó", "Không phải tuân thủ các quy tắc sử sự đó", "Có thể phải tuân thủ hoặc không, tùy theo từng trường hợp cụ thể", "Không tuân thủ"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 37. Khẳng định nào sau đây là đúng:", "options": ["Điều luật là phần tử cấu thành nhỏ nhất của hệ thống pháp luật", "Quy phạm pháp luật là phần tử cấu thành nhỏ nhất của hệ thống pháp luật", "Cả điều luật và Quy phạm pháp luật là phần tử cấu thành nhỏ nhất của hệ thống pháp luật", "Tất cả đều sai"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 38. “Văn bản quy phạm pháp luật phải được gửi đến cơ quan nhà nước có thẩm quyền để giám sát, kiểm tra” (Điều 10, Luật ban hành văn bản quy phạm pháp luật 2008).Trong quy phạm pháp luật trên, đâu là Giả định?", "options": ["Văn bản", "Văn bản quy phạm pháp luật, cơ quan nhà nước", "Kiểm tra, giám sát", "Giả định ẩn"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 4] Câu 39. “Phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng đối với nhà đầu tư có hành vi đầu tư kinh doanh vốn nhà nước khi chưa được cơ quan có thẩm quyền thẩm định chấp thuận sử dụng vốn nhà nước để đầu tư” (Khoản 1, điều 23 nghị định 53/2007/NĐ-CP). Trong quy phạm pháp luật trên, đâu là chế tài?", "options": ["Chế tài ẩn", "Gửi chế tài", "“Phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng", "“Phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng đối với nhà đầu tư có hành vi đầu tư kinh doanh vốn nhà nước khi chưa được cơ quan có thẩm quyền thẩm định chấp thuận sử dụng vốn nhà nước để đầu tư”"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 1. Khi tham gia một quan hệ pháp luật thì bắt buộc chủ thể tham gia quan hệ pháp luật đó phải có đủ các điều kiện cần thiết nào sau đây?", "options": ["Có đủ tài sản", "Có đủ tiền và thời", "Có đủ năng lực pháp luật", "Có đủ năng lực pháp luật và năng lực hành vi"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 2. Hành vi hợp pháp là:", "options": ["Làm đúng luật", "Mang lại lợi ích cho tập thể", "Tuy chưa đúng luật nhưng mang lại lợi ích cho tập thể", "Tuy làm chưa đúng luật nhưng không gây ra thiệt hại gì cả"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 3. Năng lực hành vi của chủ thể là:", "options": ["Khả năng của chủ thể tự mình thực hiện một cách độc lập các nghĩa vụ pháp lý", "Khả năng của chủ thể tự mình thực hiện một cách độc lập các quyền và nghĩa vụ pháp lý", "Khả năng của chủ thể cùng với sự giúp đỡ của người khác thực hiện các quyền và nghĩa vụ pháp lý", "Khả năng của chủ thể tự mình thực hiện một cách độc lập các quyền của mình"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 4. Năng lực hành vi của cá nhân chỉ xuất hiện khi:", "options": ["Cá nhân đủ 18 tuổi và không mắc các bệnh tâm thần", "Cá nhân đủ 14 tuổi và không mắc các bệnh về tâm thần hoặc những bệnh khác làm mất khả năng nhân thức và điều khiển hành vi", "Cá nhân đạt đến một độ tuổi nhất định và không mắc các bệnh về tâm thần hoặc những bệnh khác làm mất khả năng nhân thức và điều khiển hành vi", "Cá nhân đủ 16 tuổi và không mắc các bệnh về tâm thần hoặc những bệnh khác làm mất khả năng nhân thức và điều khiển hành vi"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 5. Quyền của chủ thể trong quan hệ pháp luật được thể hiện:", "options": ["Khả năng của chủ thể được thực hiện những hành vi nhất định do quy phạm pháp luật tương ứng quy định", "Khả năng yêu cầu cơ quan Nhà nước có thẩm quyền can thiệp, bảo vệ quyền và lợi ích hợp pháp của mình", "Khả năng yêu cầu các chủ thể khác tôn trọng quyền, nghĩa vụ; chấm dứt hành vi cản trở việc thực hiện quyền và nghĩa vụ", "Tất cả đều đúng"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 6. Yếu tố nào sau đây là hành vi?", "options": ["Doanh nghiệp A trốn thuế", "Giấc mơ", "Tư tưởng", "Suy nghĩ của con người."], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 7. Chọn ý đúng về năng lực pháp luật của cá nhân:", "options": ["Năng lực hành vi xuất hiện trước năng lực pháp luật", "Năng lực pháp luật của cá nhân thông thường xuất hiện khi cá nhân sinh ra và mất đi khi cá nhân chết", "Năng lực pháp luật của cá nhân xuất hiện khi cá nhân sinh ra và mất đi khi cá nhân chết", "Năng lực pháp luật và năng lực hành vi của cá nhân cùng đồng thời xuất hiện và cùng đồng thời mất đi"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 8. Thành phần của quan hệ pháp luật bao gồm:", "options": ["Chủ thể", "Nội dung", "Khách thể", "Tất cả đều đúng"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 9. Quan hệ pháp luật khác với những quan hệ xã hội khác ở những điểm nào?", "options": ["Các bên chủ thể mang quyền và nghĩa vụ pháp lý", "Các bên chủ thể ràng buộc với nhau bởi yếu tố tình cảm", "Phát sinh một cách ngẫu nhiên", "Các bên chủ thể thực hiện hành vi một cách tự nguyện"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 10. Hình thức của hợp đồng mua bán hàng hóa được thiết lập bằng:", "options": ["Lời văn, Văn bản, Hành vi cụ thể", "Lời nói, Văn bản, Hành vi cụ thể", "Hành vi cụ thể, khế ước", "Lời nói, Văn bản"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 11. Nhận định nào sau đây là đúng", "options": ["Quan hệ pháp luật là quan hệ xã hội", "Quan hệ đạo đức không phải là quan hệ xã hội", "Quan hệ tôn giáo không phải là quan hệ xã hội.", "Quan hệ xã hội là quan hệ pháp luật"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 12. Quan hệ nào sau đây là quan hệ quan trọng, phổ biến, được nhà nước điều chỉnh?", "options": ["Quan hệ đạo đức", "Quan hệ xã hội", "Quan hệ pháp luật", "Quan hệ tôn giáo"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 13. Quan hệ nào sau đây được điều chỉnh bằng những quy tắc ứng xử chung thể hiện ý chí của nhà nước?", "options": ["Quan hệ đạo đức", "Quan hệ xã hội", "Quan hệ pháp luật", "Quan hệ tôn giáo"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 14. Quan hệ nào sau đây thể hiện và phản ánh mối liên hệ giữa con người với con người trong những lĩnh vực khác nhau của đời sống xã hội?", "options": ["Quan hệ đạo đức", "Quan hệ pháp luật", "Quan hệ xã hội", "Quan hệ hôn nhân"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 15. Quan hệ nào sau đây, nếu không có, sẽ không được đảm bảo được lợi ích của các bên tham gia, hoặc lợi ích của cộng động, đòi hỏi Nhà nước phải đặt ra pháp luật để điều chỉnh các quan hệ như vậy?", "options": ["Quan hệ đạo đức", "Quan hệ xã hội", "Quan hệ pháp luật", "Quan hệ tôn giáo"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 5] Câu 16. Các chủ thể tham gia vào những mối quan hệ xã hội được pháp luật quy định thì phải xử sự theo cách thức của nhà nước đặt ra, là thể hiện tính chất nào của quan hệ pháp luật?", "options": ["Tính có ý chí", "Tính cơ cấu chủ thể", "Quyền được nhà nước đảm bảo thực hiện", "Quyền và nghĩa vụ của các bên tham gia"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 1. Luật đất đai năm 2013 quy định nội dung nào sau đây?", "options": ["Đất đai là tài sản thuộc sở hữu của toàn dân, do nhà nước thống nhất quản lý", "Đất đai là tài sản thuộc sở hữu của công dân và các doanh nghiệp được nhà nước bán lại", "Đất đai là tài sản thuộc sở hữu toàn dân, được nhà nước chia cho người có nhu cầu sử dụng", "Đất đai là tài sản thuộc sở hữu của công dân và nhà nước"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 2. Cục thuế tỉnh H ra quyết định xử phạt Doanh nghiệp A trốn thuế với số tiền phạt 3.000.000 đồng. Việc làm của cơ quan thuế tỉnh H gọi là:", "options": ["Tuân thủ pháp luật", "Áp dụng pháp luật", "Thi hành pháp luật", "Sử dụng pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 3. Tòa án ra bản án buộc Doanh nghiệp A phải bồi thường cho Doanh nghiệp B số tiền 10.000.000 đồng do vi phạm hợp đồng. Trách nhiệm pháp lý mà Doanh nghiệp A phải chịu là:", "options": ["Trách nhiệm hành chính", "Trách nhiệm kỷ luật", "Trách nhiệm dân sự", "Trách nhiệm bồi thường"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 4. Buộc người khác kết hôn trái với nguyện vọng của họ, gọi là:", "options": ["Tảo hôn", "Cưỡng ép kết hôn", "Đính hôn", "Kết hôn"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 5. Một chủ doanh nghiệp trong quá trình kinh doanh, không thực hiện những hành vi pháp luật cấm. Việc làm ấy gọi là:", "options": ["Tuân thủ pháp luật", "Áp dụng pháp luật", "Thi hành pháp luật", "Sử dụng pháp luật"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 6. Người bị xử phạt tù oan làm đơn kiện đòi bồi thường thiệt hại, gọi là:", "options": ["Áp dụng pháp luật", "Sử dụng pháp luật", "Chấp hành pháp luật", "Tuân thủ pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 7. Theo quy định của luật nuôi con nuôi năm 2010 thì điều kiện về chênh lệch độ tuổi giữa người nhận nuôi con nuôi và con nuôi (trừ một số trường hợp pháp luật quy định khác) phải là:", "options": ["15 tuổi", "18 tuổi", "20 tuổi", "22 tuổi"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 8. Luật hôn nhân gia đình Việt Nam năm 2014 cấm kết hôn giữa những người có quan hệ nào sau đây:", "options": ["Cùng dòng máu trực hệ, có quan hệ họ hàng trong phạm vi 03 đời", "Có quan hệ họ hàng trong phạm vi 04 đời", "Có quan hệ họ hàng trong phạm vi 05 đời", "Có quan hệ họ hàng trong phạm vi 02 đời"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 9. Sinh viên vi phạm quy chế thi cử, phải chịu loại trách nhiệm nào sau đây:", "options": ["Trách nhiệm hành chính", "Trách nhiệm dân sự", "Trách nhiệm kỷ luật", "Trách nhiệm hình sự"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 10. Người vi phạm kỷ luật lao động, tuỳ theo mức độ phạm lỗi, bị xử lý theo một trong những hình thức sau đây:", "options": ["Khiển trách/ Chuyển làm công việc khác có mức lương thấp hơn trong thời hạn tối đa là sáu tháng/ Sa thải.", "Khiển trách/ Cúp lương/ Sa thải", "Cảnh cáo/ Cúp lương/ Sa thải", "Khiển trách/ cảnh cáo/ đuổi việc"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 11. Chấp hành pháp luật là một hình thức thực hiện pháp luật trong đó:", "options": ["Các chủ thể pháp luật kiềm chế không tiến hành những hành vi mà pháp luật cấm B. Các chủ thể pháp luật tiến hành những hoạt động mà pháp luật không cấm", "Các chủ thể pháp luật thực hiện nghĩa vụ pháp lý của mình bằng những hành động tích cực", "Các chủ thể pháp luật thực hiện các quyền, tự do pháp lý của mình"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 12. Áp dụng pháp luật là một hình thức thực hiện pháp luật trong đó:", "options": ["Nhà nước bắt buộc các chủ thể pháp luật phải thực hiện những quy định của pháp luật", "Các chủ thể pháp luật tự mình thực hiện những quy định của pháp luật", "Nhà nước thông qua các cơ quan Nhà nước có thẩm quyền tổ chức cho các chủ thể khác thực hiện những quy định của pháp luật hoặc tự mình căn cứ vào những quy định của pháp luật để ra các quyết định mang tính cá biệt nhằm điều chỉnh quan hệ xã hội theo những mục tiêu cụ thể", "Các chủ thể pháp luật kiềm chế không tiến hành những hành vi mà pháp luật cấm"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 13. Mặc dù rất vội để đến cơ quan dự một cuộc họp quan trọng, nhưng ông H đã dừng xe lại khi gặp tín hiệu đèn giao thông màu đỏ. Việc dừng xe của ông H gọi là:", "options": ["Áp dụng pháp luật", "Sử dụng pháp luật", "Tuân thủ pháp luật", "Chấp hành pháp luật"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 14. Phát hiện bé T ở vào tình trạng rất nguy hiểm đến tính mạng khi bé bị rơi xuống ao, anh P đã nhảy xuống cứu bé T lên. Việc làm của anh P gọi là:", "options": ["Áp dụng pháp luật.", "Sử dụng pháp luật", "Tuân thủ pháp luật", "Chấp hành pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 15. Tòa án nhân dân tỉnh D ra quyết định tuyên bố một người mất tích. Việc ra quyết định như vậy gọi là:", "options": ["Áp dụng pháp luật", "Sử dụng pháp luật", "Tuân thủ pháp luật", "Chấp hành pháp luật"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 16. Phát hiện ông A có hành vi lừa đảo chiếm đoạt tài sản, bà K đã gửi đơn đến các cơ quan bảo vệ pháp luật để tố cáo ông A. Việc làm của bà K gọi là:", "options": ["Áp dụng pháp luật", "Sử dụng pháp luật", "Tuân thủ pháp luật", "Chấp hành pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 17. Khẳng định nào sau đây là đúng?", "options": ["Mọi hành vi vi phạm pháp luật đều là hành vi trái pháp luật", "Mọi hành vi trái pháp luật đều là vi phạm pháp luật", "Mọi hành vi có lỗi của chủ thể đều là hành vi vi phạm pháp luật", "Chủ thể vi phạm pháp luật luôn phải chịu trách nhiệm pháp lý"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 18. Hành vi nào sau đây là vi phạm hình sự?", "options": ["Cố ý gây thương tích cho người khác với tỷ lệ thương tật 30%", "Lấn chiếm lòng, lề đường để bán hàng hóa", "Lái xe đi vào đường cấm", "Hút thuốc lá nơi công cộng"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 19. Các hình thức xử phạt chính đối với chủ thể vi phạm hành chính gồm có:", "options": ["Cảnh cáo và phạt tiền", "Tịch thu tang vật, phương tiện sử dụng để vi phạm hành chính", "Phạt cải tạo", "Phạt tù"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 20. Bộ luật hình sự quy định: “Người phạm tội trong tình trạng say do dùng rượu hoặc chất kích thích mạnh khác, thì vẫn phải chịu ...\". Họ sẽ bị tội nào sau đây?", "options": ["Trách nhiệm pháp lý", "Trách nhiệm hình sự", "Trách nhiệm dân sự", "Trách nhiệm hành chính"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 21. Một người chỉ bị coi là có tội khi:", "options": ["Bị cơ quan Công an bắt theo lệnh bắt của Viện Kiểm Sát", "Bị toà án đưa ra xét xử công khai", "Bị cơ quan Công an khởi tố, điều tra về hành vi vi phạm pháp luật", "Bị toà án kết tội bằng bản án có hiệu lực pháp luật"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 22. Theo quy định tại bộ luật dân sự 2005, tài sản bao gồm:", "options": ["Vật có thực", "Tiền và giấy tờ trị giá được bằng tiền", "Các quyền về tài sản", "Tất cả các ý trên"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 23. Theo quy định của luật Hôn nhân và gia đình Việt Nam năm 2014 thì trường hợp nào sau đây không thuộc trường hợp cấm kết hôn:", "options": ["Kết hôn với người đang có vợ hoặc chồng", "Kết hôn với con nuôi", "Kết hôn với người mất năng lực hành vi dân sự", "Kết hôn với người bị nhiễm HIV"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 24. Phạt cảnh cáo là:", "options": ["Phạt hành chính", "Phạt bổ sung", "Biện pháp khắc phục hậu quả", "Biện pháp xử lý hành chính khác"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 25. Trục xuất là hình thức:", "options": ["Vừa phạt chính, vừa phạt bổ sung", "Phạt bổ sung", "Biện pháp khắc phục hậu quả", "Biện pháp xử lý hành chính khác"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 26. Ông A có hành vi xây dựng nhà ở trái phép. Hành vi này được coi là:", "options": ["Vi phạm hình sự", "Vi phạm hành chính", "Vi phạm kỷ luật", "D.Vi phạm dân sự"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 27. Lỗi nào sau đây chủ thể vi phạm không nhận thức được hành vi của mình là nguy hiểm cho xã hội?", "options": ["Cố ý trực tiếp", "Cố ý gián tiếp", "Vô ý do cẩu thả", "Vô ý do quá tự tin"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 28. Chị B không đội mũ bảo hiểm. Hành vi của chị B được coi là:", "options": ["Không tuân thủ pháp luật", "Không chấp hành pháp luật", "Không sử dụng pháp luật", "Không áp dụng pháp luật"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 29. Chị M làm đơn yêu cầu tòa án nhân dân thành phố Biên Hòa tuyên bố chồng mình bị mất tích. Sau khi xem xét, Tòa án nhân dân thành phố Biên Hòa đã ra quyết định tuyên bố chồng chị M mất tích. Hỏi việc làm của Tòa án nhân dân thành phố Biên Hòa và của chị M là những hình thức thực hiện pháp luật nào?", "options": ["Tuân thủ pháp luật và chấp hành pháp luật", "Sử dụng pháp luật và áp dụng pháp luật", "Áp dụng pháp luật và sử dụng pháp luật", "Sử dụng pháp luật và tuân thủ pháp luật"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 30. Vì ghen nên ông A gây thương tích cho ông B. Lỗi của ông A trong trường hợp này là:", "options": ["Cố ý trực tiếp", "Cố ý gián tiếp", "Vô ý do cẩu thả", "Vô ý do quá tự tin"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 31. Cấu thành của vi phạm pháp luật bao gồm 4 bộ phận:", "options": ["Mặt khách quan; Mặt chủ quan; Mặt chủ thể; Mặt khách thể", "Mặt khách quan; Mặt chủ quan; chủ thể; khách thể", "Khách quan; Chủ quan; Mặt chủ thể; Mặt khách thể", "Mặt khách quan; Mặt chủ quan; Mặt chủ thể; khách thể"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 32. Lỗi nào sau đây chủ thể nhận thức được hành vi của mình là nguy hiểm cho xã hội nhưng lại thờ ơ, bỏ mặc chấp nhận hậu quả?", "options": ["Cố ý trực tiếp", "Cố ý gián tiếp", "Vô ý do cẩu thả", "Vô ý do quá tự tin"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 33. Lỗi cố ý gián tiếp sẽ chuyển thành lỗi nào nếu chủ thể biết rằng hậu quả sẽ chắc chắn xảy ra?", "options": ["Cố ý trực tiếp", "Cố ý gián tiếp", "Vô ý do cẩu thả", "Vô ý do quá tự tin"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 34. Ông A tham nhũng tài sản nhà nước. Động cơ của ông A là:", "options": ["Động cơ vụ lợi", "Động cơ che dấu", "Động cơ đê hèn", "Động cơ trả thù"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 35. Ông K gây thương tích cho ông H với tỷ lệ thương tật là 41%. Hành vi của ông K thuộc loại vi phạm pháp luật nào?", "options": ["Hình sự", "Hành chính", "Dân sự", "Kỷ luật"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 36. Công ty A vi phạm hợp đồng với công ty B. Hành vi của công ty A thuộc loại vi phạm pháp luật:", "options": ["Hình sự", "Hành chính", "Dân sự", "Kỷ luật"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 37. Thiệt hại nào sau đây không phải là thiệt hại về vật chất?", "options": ["Tiền bạc", "Nhà cửa", "Danh dự", "Xe ô tô"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 38. Yếu tố nào sạu đây không thuộc mặt chủ quan của vi phạm pháp luật?", "options": ["Lỗi", "Động cơ", "Hành vi", "Mục đích"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 39. Trách nhiệm pháp lý nào sau đây được coi là trách nhiệm nặng nhất?", "options": ["Trách nhiệm pháp lý", "Trách nhiệm hình sự", "Trách nhiệm dân sự", "Trách nhiệm hành chính"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 40. Người bắt được gia súc của người khác thất lạc phải nuôi giữ gia súc và phải khai báo với chính quyền địa phương. Sau 6 tháng kể từ ngày nào thì người bắt được sẽ được xác lập quyền sở hữu của mình?", "options": ["Kể từ ngày bắt được", "Kể từ ngày khai báo với chính quyền địa phương", "Sau 15 ngày Kể từ ngày bắt được", "Sau 15 ngày Kể từ ngày khai báo với chính quyền địa phương"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 41. Anh X 21 tuổi phạm tôi: cướp tài sản, giết người bị tòa án có thẩm quyền tuyên phạt 28 năm tù giam. Giả sử anh Y 17 tuổi phạm có cùng hành vi phạm tội tương tự như anh X thì sẽ bị xử phạt bao nhiêu năm tù giam?", "options": ["18 năm", "14 năm", "21 năm", "12 năm"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 42. Anh K 19 tuổi phạm tôi: cướp giật, trộm cắp tài sản bị tòa án có thẩm quyền tuyên phạt tổng 28 năm tù giam. Giả sử anh S 15 tuổi phạm có cùng hành vi phạm tội tương tự như anh K thì sẽ bị xử phạt bao nhiêu năm tù giam?", "options": ["14", "12", "13", "16"], "correct": 1}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 43. Việc kết hôn giữa hai người Việt Nam với nhau ở Việt Nam do cơ quan nào giải quyết:", "options": ["Ủy ban nhân dân cấp xã", "Ủy ban nhân dân cấp tỉnh", "Ủy ban nhân dân cấp huyện", "Hội liên hiệp phụ nữ xã, phường, thị trấn"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 44. A dùng xe máy đi đánh bạc. Xe máy được coi là:", "options": ["Khách thể", "Công cụ vi phạm", "Phương tiện vi phạm", "cá nhân vi phạm"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 45. Yếu tố nào sau đây là yếu tố bắt buộc trong cấu thành của mọi vi phạm phạm pháp luật", "options": ["Hành vi", "Hậu quả", "Thời gian", "Địa điểm"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 46. Anh A dùng dao khống chế chị B để cướp sợi dây chuyền. Đâu là công cụ vi phạm pháp luật?", "options": ["Con dao", "Sợi dây chuyền Chị B", "Tất cả đều đúng"], "correct": 0}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 47. Anh A dùng dao khống chế chị B và chị C để cướp sợi dây chuyền. Yếu tố nào là chủ thể của vi phạm pháp luật?", "options": ["Con dao", "Sợi dây chuyền", "Anh A", "Chị B"], "correct": 2}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 48. Người nào sau đây không thuộc diện thừa kế?", "options": ["Con nuôi của người chết", "Chị gái của người chết", "Chồng của người chết", "Bạn thân của người chết"], "correct": 3}, {"question": "[PHẦN CÂU HỎI - CHƯƠNG 6] Câu 49. Anh A khởi kiện Công ty TNHH B về việc anh bị sa thải trái pháp luật. Ngành luật nào điều chỉnh quy trình giải quyết vụ việc này là:", "options": ["Luật Lao động", "Luật Dân sự", "Luật Tố tụng dân sự", "Luật Thi hành án dân sự."], "correct": 0}];
+
+        // --- AUTO CLEAR DATA SAU 5 TIẾNG ---
+        const FIVE_HOURS = 5 * 60 * 60 * 1000;
+        const nowTime = Date.now();
+        
+        let initHistory = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
+        initHistory = initHistory.filter(h => !h.timestamp || (nowTime - h.timestamp <= FIVE_HOURS));
+        localStorage.setItem('pldc_history_v3', JSON.stringify(initHistory));
+        
+        let initWrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
+        initWrong = initWrong.filter(w => !w.timestamp || (nowTime - w.timestamp <= FIVE_HOURS));
+        localStorage.setItem('pldc_wrong_v3', JSON.stringify(initWrong));
+        // -----------------------------------
+
+        let quizData = [...originalData];
+        let currentQuestion = 0;
+        let currentMode = 'practice';
+        let userAnswers = {};
+        let examTimer = null;
+        let elapsedSeconds = 0;
+        let isShuffled = false;
+
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const progressEl = document.getElementById('progress');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const timerEl = document.getElementById('timer');
+        const quizCard = document.getElementById('quiz-card');
+        const resultsCard = document.getElementById('results-card');
+        const jumpInput = document.getElementById('jump-input');
+        const btnShuffle = document.getElementById('btn-shuffle');
+
+        window.toggleShuffle = () => {
+            isShuffled = !isShuffled;
+            if (isShuffled) {
+                btnShuffle.classList.add('active');
+                quizData = [...originalData];
+                for (let i = quizData.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [quizData[i], quizData[j]] = [quizData[j], quizData[i]];
+                }
+            } else {
+                btnShuffle.classList.remove('active');
+                quizData = [...originalData];
+            }
+            window.switchMode(currentMode);
+        };
+
+        window.switchMode = (mode) => {
+            currentMode = mode;
+            document.getElementById('btn-practice').classList.toggle('active', mode === 'practice');
+            document.getElementById('btn-exam').classList.toggle('active', mode === 'exam');
+            
+            userAnswers = {};
+            currentQuestion = 0;
+            resultsCard.style.display = 'none';
+            quizCard.style.display = 'block';
+
+            if (mode === 'exam') {
+                timerEl.style.display = 'block';
+                startTimerUp();
+            } else {
+                timerEl.style.display = 'none';
+                clearInterval(examTimer);
+            }
+            loadQuestion();
+        };
+
+        function startTimerUp() {
+            clearInterval(examTimer);
+            elapsedSeconds = 0;
+            updateTimerDisplay();
+            examTimer = setInterval(() => {
+                elapsedSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            let mins = Math.floor(elapsedSeconds / 60);
+            let secs = elapsedSeconds % 60;
+            timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimeDisplay(secsCount) {
+            let m = Math.floor(secsCount / 60);
+            let s = secsCount % 60;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestion];
+            questionEl.textContent = q.question;
+            optionsEl.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.textContent = opt;
+                
+                if (currentMode === 'practice') {
+                    btn.onclick = () => window.handlePracticeClick(btn, index, q.correct);
+                } else {
+                    if (userAnswers[currentQuestion] === index) {
+                        btn.classList.add('selected-exam');
+                    }
+                    btn.onclick = () => window.handleExamClick(index);
+                }
+                optionsEl.appendChild(btn);
+            });
+            
+            progressEl.textContent = `${currentQuestion + 1} / ${quizData.length}`;
+            jumpInput.max = quizData.length;
+            btnPrev.disabled = currentQuestion === 0;
+            
+            if (currentMode === 'exam' && currentQuestion === quizData.length - 1) {
+                btnNext.textContent = 'Nộp bài';
+            } else {
+                btnNext.textContent = 'Tiếp tục';
+            }
+        }
+
+        window.handlePracticeClick = (btn, selectedIndex, correctIndex) => {
+            const allOptions = optionsEl.querySelectorAll('.option');
+            allOptions.forEach(o => o.style.pointerEvents = 'none'); 
+
+            if (selectedIndex === correctIndex) {
+                btn.classList.add('correct');
+                setTimeout(() => {
+                    if (currentQuestion < quizData.length - 1) {
+                        currentQuestion++;
+                        loadQuestion();
+                    }
+                }, 500);
+            } else {
+                btn.classList.add('incorrect');
+                setTimeout(() => {
+                    btn.classList.remove('incorrect');
+                    allOptions.forEach(o => o.style.pointerEvents = 'auto');
+                }, 600);
+            }
+        };
+
+        window.handleExamClick = (index) => {
+            userAnswers[currentQuestion] = index;
+            const allOptions = optionsEl.querySelectorAll('.option');
+            allOptions.forEach(o => o.classList.remove('selected-exam'));
+            allOptions[index].classList.add('selected-exam');
+        };
+
+        window.nextQuestion = () => {
+            if (currentMode === 'exam' && currentQuestion === quizData.length - 1) {
+                window.submitExam();
+                return;
+            }
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            }
+        };
+
+        window.prevQuestion = () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        };
+        
+        window.jumpToQuestion = () => {
+            let target = parseInt(jumpInput.value);
+            if (!isNaN(target) && target >= 1 && target <= quizData.length) {
+                currentQuestion = target - 1;
+                loadQuestion();
+                jumpInput.value = '';
+            }
+        };
+
+        window.submitExam = async () => {
+            clearInterval(examTimer);
+            let score = 0;
+            let currentWrong = [];
+            
+            quizData.forEach((q, idx) => {
+                if (userAnswers[idx] === q.correct) {
+                    score++;
+                } else {
+                    currentWrong.push({
+                        q_text: q.question,
+                        correct_ans: q.options[q.correct],
+                        user_ans: userAnswers[idx] !== undefined ? q.options[userAnswers[idx]] : "Chưa chọn"
+                    });
+                }
+            });
+
+            const timeStr = formatTimeDisplay(elapsedSeconds);
+            let localName = currentUser ? currentUser.displayName : "Khách";
+            
+            let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
+            history.unshift({ date: new Date().toLocaleString('vi-VN'), score: score, total: quizData.length, time: timeStr, name: localName, timestamp: Date.now() });
+            localStorage.setItem('pldc_history_v3', JSON.stringify(history));
+
+            let savedWrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
+            currentWrong.forEach(cw => {
+                cw.timestamp = Date.now();
+                let exists = savedWrong.find(w => w.q_text === cw.q_text);
+                if (!exists) savedWrong.unshift(cw);
+            });
+            localStorage.setItem('pldc_wrong_v3', JSON.stringify(savedWrong));
+
+            if (currentUser && isFirebaseActive) {
+                try {
+                    await addDoc(collection(db, "leaderboard"), {
+                        uid: currentUser.uid,
+                        name: currentUser.displayName,
+                        photoURL: currentUser.photoURL,
+                        score: score,
+                        total: quizData.length,
+                        timeSeconds: elapsedSeconds,
+                        timeStr: timeStr,
+                        timestamp: serverTimestamp()
+                    });
+                } catch (e) {}
+            }
+
+            quizCard.style.display = 'none';
+            resultsCard.style.display = 'block';
+            document.getElementById('score-display').textContent = `${score}/${quizData.length}`;
+            
+            let msg = "";
+            if(!currentUser && isFirebaseActive) {
+                msg = "<small style='color:var(--text)'>Đăng nhập để lưu điểm lên bảng xếp hạng.</small>";
+            } else if (!isFirebaseActive) {
+                msg = "<small style='color:var(--text)'>Đang chạy chế độ offline.</small>";
+            }
+            document.getElementById('result-message').innerHTML = msg;
+        };
+
+        window.restartQuiz = () => {
+            window.switchMode(currentMode);
+        };
+
+        window.openModal = () => {
+            document.getElementById('data-modal').style.display = 'flex';
+            renderLocalData();
+            if (isFirebaseActive) { fetchLeaderboard(); } 
+            else { document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Offline mode.</p>"; }
+        };
+        
+        window.closeModal = () => {
+            document.getElementById('data-modal').style.display = 'none';
+        };
+
+        window.switchTab = (tabId, btn) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        };
+
+        function renderLocalData() {
+            let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
+            let hHTML = history.length > 0 ? "" : "<p class='empty-state'>Chưa có dữ liệu.</p>";
+            history.forEach((h, i) => {
+                hHTML += `<div class="history-item">
+                    <div class="lb-info">
+                        <span class="lb-name">${h.name}</span>
+                        <span class="lb-time">${h.date} - ${h.time}</span>
+                    </div>
+                    <div class="lb-score">${h.score}/${h.total}</div>
+                </div>`;
+            });
+            document.getElementById('history-list').innerHTML = hHTML;
+
+            let wrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
+            let wHTML = wrong.length > 0 ? "" : "<p class='empty-state'>Không có câu sai.</p>";
+            if(wrong.length > 0) {
+                 wHTML = `<button class="simple-link" onclick="window.clearWrong()">Xóa danh sách</button>` + wHTML;
+            }
+            wrong.forEach((w) => {
+                wHTML += `<div class="wrong-q-item">
+                    <div class="wrong-q-title">${w.q_text}</div>
+                    <div class="wrong-q-user">Bỏ qua / Chọn sai: ${w.user_ans}</div>
+                    <div class="wrong-q-correct">Đáp án đúng: ${w.correct_ans}</div>
+                </div>`;
+            });
+            
+            document.getElementById('wrong-list').innerHTML = wHTML;
+        }
+
+        window.clearWrong = () => {
+            if(confirm("Xóa dữ liệu câu sai?")) {
+                localStorage.removeItem('pldc_wrong_v3');
+                renderLocalData();
+            }
+        };
+
+        async function fetchLeaderboard() {
+            try {
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), orderBy("timeSeconds", "asc"), limit(50));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Chưa có dữ liệu.</p>";
+                    return;
+                }
+
+                let lbHTML = "";
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let rankClass = rank <= 3 ? `rank-${rank}` : '';
+                    let rankDisplay = rank;
+                    
+                    lbHTML += `
+                    <div class="leaderboard-item">
+                        <div class="rank ${rankClass}">#${rankDisplay}</div>
+                        <img src="${data.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTIlOGRmMCIvPjwvc3ZnPg=='}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover;">
+                        <div class="lb-info">
+                            <span class="lb-name">${data.name}</span>
+                            <span class="lb-time">${data.timeStr}</span>
+                        </div>
+                        <div class="lb-score">${data.score}</div>
+                    </div>`;
+                    rank++;
+                });
+                
+                document.getElementById('leaderboard-list').innerHTML = lbHTML;
+
+            } catch (e) {
+                document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Lỗi kết nối.</p>";
+            }
+        }
+
+        window.onclick = function(event) {
+            let modal = document.getElementById('data-modal');
+            if (event.target == modal) {
+                window.closeModal();
+            }
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
