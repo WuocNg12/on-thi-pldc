@@ -70,6 +70,7 @@
         
         .timer { font-family: monospace; font-size: 1rem; font-weight: 600; color: var(--text); display: none; }
         
+        .exam-info { display: none; background: #f1f5f9; color: #475569; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; margin: -8px 0 20px; }
         .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 24px; color: var(--text); }
         
         .options { display: flex; flex-direction: column; gap: 10px; }
@@ -190,6 +191,7 @@
                 </div>
                 <span class="timer" id="timer">00:00</span>
             </div>
+            <div class="exam-info" id="exam-info"></div>
             
             <div class="question" id="question">Vui lòng đợi...</div>
             <div class="options" id="options"></div>
@@ -204,7 +206,7 @@
             <h2 style="margin-top:0; font-weight:600;">Hoàn thành bài thi</h2>
             <div class="score-display" id="score-display">0/0</div>
             <p id="result-message" style="font-size: 1rem; color: #475569; margin-bottom: 30px;"></p>
-            <button class="action-btn primary-btn" onclick="window.restartQuiz()">Làm lại</button>
+            <button class="action-btn primary-btn" id="btn-restart" onclick="window.restartQuiz()">Làm lại</button>
         </div>
     </div>
 
@@ -410,9 +412,17 @@
                 }
 
                 loadingOverlay.style.display = 'none';
-                quizData = [...dbData];
-                if(isShuffled) window.toggleShuffle(true); // Giữ nguyên state đảo câu hỏi nếu đang bật
-                else loadQuestion();
+                if (currentMode === 'exam') {
+                    // Đang thi: giữ nguyên đề và thứ tự, chỉ cập nhật nội dung câu vừa sửa/xóa
+                    quizData = quizData.map(q => dbData.find(d => d.id === q.id)).filter(Boolean);
+                    if (quizData.length === 0) { window.switchMode('exam'); return; }
+                    currentQuestion = Math.min(currentQuestion, quizData.length - 1);
+                    loadQuestion();
+                } else {
+                    quizData = [...dbData];
+                    if(isShuffled) window.toggleShuffle(true); // Giữ nguyên state đảo câu hỏi nếu đang bật
+                    else loadQuestion();
+                }
                 
             } catch(e) {
                 console.error(e);
@@ -421,26 +431,86 @@
         }
 
         // --- LOGIC LÀM BÀI ---
+
+        // THI THỬ THEO ĐỀ: mỗi đề tối đa 50 câu, các đề không trùng câu cho đến khi thi hết kho câu hỏi
+        const EXAM_SIZE = 50;
+        const EXAM_KEY = 'pldc_exam_state_v1';
+        let examInfoText = '';
+
+        function loadExamState() {
+            try {
+                const st = JSON.parse(localStorage.getItem(EXAM_KEY));
+                if (st && Array.isArray(st.used)) {
+                    return { used: st.used, current: Array.isArray(st.current) ? st.current : null, done: st.done || 0 };
+                }
+            } catch (e) {}
+            return { used: [], current: null, done: 0 };
+        }
+
+        function saveExamState(st) {
+            try { localStorage.setItem(EXAM_KEY, JSON.stringify(st)); } catch (e) {}
+        }
+
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // Trả về danh sách câu của đề thi hiện tại, hoặc null nếu người dùng không muốn làm lại từ đầu
+        function prepareExam() {
+            const byId = new Map(dbData.map(d => [d.id, d]));
+            let st = loadExamState();
+            st.used = st.used.filter(id => byId.has(id)); // bỏ các câu đã bị xóa khỏi DB
+            let usedSet = new Set(st.used);
+            let pool = dbData.filter(d => !usedSet.has(d.id));
+
+            if (pool.length === 0) {
+                const ok = confirm(`Bạn đã thi thử hết ${dbData.length} câu hỏi rồi!\n\nBạn có muốn bắt đầu làm lại từ đầu không?\n(Các đề đã thi, lịch sử thi thử và danh sách câu sai trước đó sẽ bị xóa.)`);
+                if (!ok) return null;
+                localStorage.removeItem(EXAM_KEY);
+                localStorage.removeItem('pldc_history_v3');
+                localStorage.removeItem('pldc_wrong_v3');
+                st = { used: [], current: null, done: 0 };
+                usedSet = new Set();
+                pool = [...dbData];
+            }
+
+            // Đề đang làm dở (chưa nộp) thì giữ nguyên, không bốc lại câu khác
+            let batch = [];
+            if (st.current) batch = st.current.map(id => byId.get(id)).filter(d => d && !usedSet.has(d.id));
+            if (batch.length === 0) batch = shuffleArray(pool).slice(0, EXAM_SIZE);
+            st.current = batch.map(d => d.id);
+            saveExamState(st);
+
+            const totalExams = st.done + Math.ceil(pool.length / EXAM_SIZE);
+            examInfoText = `Đề thi thử số ${st.done + 1}/${totalExams} · ${batch.length} câu · Đã thi ${st.used.length}/${dbData.length} câu`;
+            return isShuffled ? shuffleArray(batch) : [...batch].sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+
         window.toggleShuffle = (forceState = null) => {
             if (forceState !== null) isShuffled = !forceState; // Đảo ngược để logic dưới chạy đúng
             
             isShuffled = !isShuffled;
-            if (isShuffled) {
-                btnShuffle.classList.add('active');
-                quizData = [...dbData];
-                for (let i = quizData.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [quizData[i], quizData[j]] = [quizData[j], quizData[i]];
-                }
-            } else {
-                btnShuffle.classList.remove('active');
-                quizData = [...dbData];
-            }
+            btnShuffle.classList.toggle('active', isShuffled);
             window.switchMode(currentMode);
         };
 
         window.switchMode = (mode) => {
-            if(quizData.length === 0) return;
+            if(dbData.length === 0) return;
+
+            if (mode === 'exam') {
+                const examSet = prepareExam();
+                if (examSet === null) mode = 'practice'; // Không muốn làm lại → quay về Luyện tập
+                else quizData = examSet;
+            }
+            if (mode === 'practice') {
+                quizData = isShuffled ? shuffleArray(dbData) : [...dbData];
+            }
+
             currentMode = mode;
             document.getElementById('btn-practice').classList.toggle('active', mode === 'practice');
             document.getElementById('btn-exam').classList.toggle('active', mode === 'exam');
@@ -450,11 +520,15 @@
             resultsCard.style.display = 'none';
             quizCard.style.display = 'block';
 
+            const examInfoEl = document.getElementById('exam-info');
             if (mode === 'exam') {
                 timerEl.style.display = 'block';
+                examInfoEl.textContent = examInfoText;
+                examInfoEl.style.display = 'block';
                 startTimerUp();
             } else {
                 timerEl.style.display = 'none';
+                examInfoEl.style.display = 'none';
                 clearInterval(examTimer);
             }
             loadQuestion();
@@ -585,15 +659,22 @@
             const timeStr = `${Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')}:${(elapsedSeconds % 60).toString().padStart(2, '0')}`;
             let localName = currentUser ? currentUser.displayName : "Khách";
             
-            // Xóa cache cũ hơn 5 tiếng
-            const FIVE_HOURS = 5 * 60 * 60 * 1000;
-            const nowTime = Date.now();
+            // Đánh dấu các câu của đề này là ĐÃ THI để đề sau bốc câu khác
+            const examState = loadExamState();
+            const usedSet = new Set(examState.used);
+            quizData.forEach(q => usedSet.add(q.id));
+            examState.used = [...usedSet];
+            examState.current = null;
+            examState.done = (examState.done || 0) + 1;
+            saveExamState(examState);
+            const examNo = examState.done;
+            const remaining = dbData.filter(d => !usedSet.has(d.id)).length;
+
+            // Lịch sử và câu sai được giữ lại cho đến khi người dùng chọn làm lại từ đầu
             let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
-            history = history.filter(h => !h.timestamp || (nowTime - h.timestamp <= FIVE_HOURS));
             let savedWrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
-            savedWrong = savedWrong.filter(w => !w.timestamp || (nowTime - w.timestamp <= FIVE_HOURS));
             
-            history.unshift({ date: new Date().toLocaleString('vi-VN'), score: score, total: quizData.length, time: timeStr, name: localName, timestamp: Date.now() });
+            history.unshift({ date: new Date().toLocaleString('vi-VN'), score: score, total: quizData.length, time: timeStr, name: localName, examNo: examNo, timestamp: Date.now() });
             localStorage.setItem('pldc_history_v3', JSON.stringify(history));
 
             currentWrong.forEach(cw => {
@@ -622,8 +703,16 @@
             resultsCard.style.display = 'block';
             document.getElementById('score-display').textContent = `${score}/${quizData.length}`;
             
-            let msg = "";
-            if(!currentUser && isFirebaseActive) msg = "<small style='color:var(--text)'>Đăng nhập để lưu điểm lên bảng xếp hạng.</small>";
+            let msg = `Đề thi thử số ${examNo} · Sai ${currentWrong.length} câu (xem ở Xếp hạng & Lịch sử → Câu sai).<br>Đã thi ${examState.used.length}/${dbData.length} câu.`;
+            const btnRestart = document.getElementById('btn-restart');
+            if (remaining > 0) {
+                msg += ` Còn ${remaining} câu chưa thi.`;
+                btnRestart.textContent = 'Thi đề tiếp theo';
+            } else {
+                msg += ' Bạn đã thi hết toàn bộ câu hỏi!';
+                btnRestart.textContent = 'Làm lại từ đầu';
+            }
+            if(!currentUser && isFirebaseActive) msg += "<br><small style='color:var(--text)'>Đăng nhập để lưu điểm lên bảng xếp hạng.</small>";
             document.getElementById('result-message').innerHTML = msg;
         };
 
@@ -795,14 +884,11 @@
         };
 
         function renderLocalData() {
-            // Lọc rác 5 tiếng một lần nữa lúc mở modal
-            const FIVE_HOURS = 5 * 60 * 60 * 1000;
-            const nowTime = Date.now();
             let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
             let hHTML = history.length > 0 ? "" : "<p class='empty-state'>Chưa có dữ liệu.</p>";
             history.forEach((h) => {
-                if(!h.timestamp || (nowTime - h.timestamp <= FIVE_HOURS)) {
-                     hHTML += `<div class="history-item"><div class="lb-info"><span class="lb-name">${h.name}</span><span class="lb-time">${h.date} - ${h.time}</span></div><div class="lb-score">${h.score}/${h.total}</div></div>`;
+                if(h) {
+                     hHTML += `<div class="history-item"><div class="lb-info"><span class="lb-name">${h.examNo ? "Đề " + h.examNo + " · " : ""}${h.name}</span><span class="lb-time">${h.date} - ${h.time}</span></div><div class="lb-score">${h.score}/${h.total}</div></div>`;
                 }
             });
             document.getElementById('history-list').innerHTML = hHTML;
@@ -810,7 +896,7 @@
             let wrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
             let wHTML = wrong.length > 0 ? `<button class="simple-link" onclick="window.clearWrong()">Xóa danh sách</button>` : "<p class='empty-state'>Không có câu sai.</p>";
             wrong.forEach((w) => {
-                if(!w.timestamp || (nowTime - w.timestamp <= FIVE_HOURS)) {
+                if(w) {
                      wHTML += `<div class="wrong-q-item"><div class="wrong-q-title">${w.q_text}</div><div class="wrong-q-user">Bỏ qua / Chọn sai: ${w.user_ans}</div><div class="wrong-q-correct">Đáp án đúng: ${w.correct_ans}</div></div>`;
                 }
             });
@@ -821,19 +907,24 @@
 
         async function fetchLeaderboard() {
             try {
-                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), orderBy("timeSeconds", "asc"), limit(50));
+                // Chỉ sắp xếp theo 1 trường trên server (không cần tạo Index), phần còn lại sắp xếp ở trình duyệt
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(300));
                 const querySnapshot = await getDocs(q);
+                const rows = [];
+                querySnapshot.forEach((d) => rows.push(d.data()));
+                const pct = (d) => d.total ? d.score / d.total : 0;
+                rows.sort((a, b) => (pct(b) - pct(a)) || (a.timeSeconds - b.timeSeconds));
+                const topRows = rows.slice(0, 50);
                 
                 if (querySnapshot.empty) { document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Chưa có dữ liệu.</p>"; return; }
                 let lbHTML = ""; let rank = 1;
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+                topRows.forEach((data) => {
                     let rankClass = rank <= 3 ? `rank-${rank}` : '';
-                    lbHTML += `<div class="leaderboard-item"><div class="rank ${rankClass}">#${rank}</div><img src="${data.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTIlOGRmMCIvPjwvc3ZnPg=='}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover;"><div class="lb-info"><span class="lb-name">${data.name}</span><span class="lb-time">${data.timeStr}</span></div><div class="lb-score">${data.score}</div></div>`;
+                    lbHTML += `<div class="leaderboard-item"><div class="rank ${rankClass}">#${rank}</div><img src="${data.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTIlOGRmMCIvPjwvc3ZnPg=='}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover;"><div class="lb-info"><span class="lb-name">${data.name}</span><span class="lb-time">${data.timeStr}</span></div><div class="lb-score">${data.score}${data.total ? "/" + data.total : ""}</div></div>`;
                     rank++;
                 });
                 document.getElementById('leaderboard-list').innerHTML = lbHTML;
-            } catch (e) { document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Lỗi kết nối.</p>"; }
+            } catch (e) { console.error("Lỗi tải bảng xếp hạng:", e); document.getElementById('leaderboard-list').innerHTML = "<p class='empty-state'>Lỗi kết nối: " + (e.code || e.message) + "</p>"; }
         }
 
         window.onclick = function(event) {
