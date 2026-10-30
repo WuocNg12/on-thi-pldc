@@ -70,7 +70,11 @@
         
         .timer { font-family: monospace; font-size: 1rem; font-weight: 600; color: var(--text); display: none; }
         
-        .exam-info { display: none; background: #f1f5f9; color: #475569; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; margin: -8px 0 20px; }
+        .exam-info { display: none; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: #f1f5f9; color: #475569; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; margin: -8px 0 20px; }
+        .info-link { background: none; border: none; color: #2563eb; font-size: 0.85rem; cursor: pointer; padding: 0; text-decoration: underline; }
+        .result-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .data-hint { color: #94a3b8; font-size: 0.8rem; margin: 0 0 12px; }
+        .wrong-exam-header { margin-top: 12px; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text); }
         .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 24px; color: var(--text); }
         
         .options { display: flex; flex-direction: column; gap: 10px; }
@@ -180,7 +184,7 @@
         </div>
 
         <div class="quiz-card" id="quiz-card">
-            <div id="quiz-loading" class="loading-overlay">Đang tải dữ liệu câu hỏi từ đám mây...</div>
+            <div id="quiz-loading" class="loading-overlay">Đang tải dữ liệu câu hỏi hehe...</div>
             <button class="admin-edit-btn" id="btn-edit-current" onclick="window.editCurrentQuestion()">Sửa câu này</button>
             
             <div class="quiz-header">
@@ -191,9 +195,9 @@
                 </div>
                 <span class="timer" id="timer">00:00</span>
             </div>
-            <div class="exam-info" id="exam-info"></div>
+            <div class="exam-info" id="exam-info"><span id="exam-info-text"></span><button class="info-link" onclick="window.resetAllExams()">Làm lại toàn bộ đề thi thử</button></div>
             
-            <div class="question" id="question">Vui lòng đợi...</div>
+            <div class="question" id="question">Đợi xíu nha...</div>
             <div class="options" id="options"></div>
             
             <div class="controls">
@@ -203,10 +207,14 @@
         </div>
 
         <div class="quiz-card results-container" id="results-card">
-            <h2 style="margin-top:0; font-weight:600;">Hoàn thành bài thi</h2>
+            <h2 style="margin-top:0; font-weight:600;">Hoàn thành</h2>
             <div class="score-display" id="score-display">0/0</div>
             <p id="result-message" style="font-size: 1rem; color: #475569; margin-bottom: 30px;"></p>
-            <button class="action-btn primary-btn" id="btn-restart" onclick="window.restartQuiz()">Làm lại</button>
+            <div class="result-actions">
+                <button class="action-btn" id="btn-view-wrong" onclick="window.showWrongTab()">Xem câu sai</button>
+                <button class="action-btn primary-btn" id="btn-restart" onclick="window.restartQuiz()">Làm lại</button>
+                <button class="action-btn" onclick="window.resetAllExams()">Làm lại toàn bộ đề thi thử</button>
+            </div>
         </div>
     </div>
 
@@ -215,9 +223,9 @@
         <div class="modal-content">
             <span class="close-btn" onclick="window.closeModal('data-modal')">✕</span>
             <div class="tabs">
-                <button class="tab-btn active" onclick="window.switchTab('leaderboard-tab', this, 'data-modal')">Xếp hạng</button>
-                <button class="tab-btn" onclick="window.switchTab('history-tab', this, 'data-modal')">Lịch sử</button>
-                <button class="tab-btn" onclick="window.switchTab('wrong-tab', this, 'data-modal')">Câu sai</button>
+                <button class="tab-btn active" id="tab-btn-leaderboard" onclick="window.switchTab('leaderboard-tab', this, 'data-modal')">Xếp hạng</button>
+                <button class="tab-btn" id="tab-btn-history" onclick="window.switchTab('history-tab', this, 'data-modal')">Lịch sử</button>
+                <button class="tab-btn" id="tab-btn-wrong" onclick="window.switchTab('wrong-tab', this, 'data-modal')">Câu sai</button>
             </div>
             
             <div id="leaderboard-tab" class="tab-content active">
@@ -241,7 +249,7 @@
             <div class="tabs" style="margin-bottom: 16px;">
                 <button class="tab-btn active" onclick="window.switchTab('admin-list-tab', this, 'admin-modal')">Danh sách câu hỏi</button>
                 <button class="tab-btn" id="tab-btn-editor" onclick="window.switchTab('admin-edit-tab', this, 'admin-modal'); window.prepareAddQuestion();">Thêm mới</button>
-                <button class="tab-btn" onclick="window.pushInitData()" style="margin-left: auto; color: #2563eb;">[Cứu hộ] Khôi phục DB gốc</button>
+                <button class="tab-btn" onclick="window.pushInitData()" style="margin-left: auto; color: #2563eb;">[Cứu hộ] Khôi phục</button>
             </div>
             
             <!-- Danh sách câu hỏi -->
@@ -326,6 +334,8 @@
         let examTimer = null;
         let elapsedSeconds = 0;
         let isShuffled = false;
+        let examSubmitted = false;      // chặn nộp bài nhiều lần
+        let lastSubmittedExamNo = 0;    // số đề vừa nộp (để nút "Xem câu sai" nhảy đúng đề)
 
         const questionEl = document.getElementById('question');
         const optionsEl = document.getElementById('options');
@@ -371,6 +381,8 @@
                         document.getElementById('btn-admin').style.display = 'none';
                         document.getElementById('btn-edit-current').style.display = 'none';
                     }
+                    // Mỗi tài khoản có tiến trình thi riêng: đang thi dở mà đổi tài khoản thì nạp lại đề của tài khoản đó
+                    if (currentMode === 'exam' && !examSubmitted && dbData.length > 0) window.switchMode('exam');
                 });
             }
         } catch (e) { console.error(e); }
@@ -434,22 +446,35 @@
 
         // THI THỬ THEO ĐỀ: mỗi đề tối đa 50 câu, các đề không trùng câu cho đến khi thi hết kho câu hỏi
         const EXAM_SIZE = 50;
-        const EXAM_KEY = 'pldc_exam_state_v1';
+        const FIVE_HOURS = 5 * 60 * 60 * 1000;
         let examInfoText = '';
 
-        function loadExamState() {
+        // Dữ liệu thi thử lưu ở trình duyệt (localStorage), TÁCH RIÊNG theo từng tài khoản (khách dùng chung 1 kho "guest")
+        function lsKey(name) { return `pldc_${name}_${currentUser ? currentUser.uid : 'guest'}`; }
+        function lsGet(name, fallback) {
             try {
-                const st = JSON.parse(localStorage.getItem(EXAM_KEY));
-                if (st && Array.isArray(st.used)) {
-                    return { used: st.used, current: Array.isArray(st.current) ? st.current : null, done: st.done || 0 };
-                }
-            } catch (e) {}
+                const v = JSON.parse(localStorage.getItem(lsKey(name)));
+                return (v === null || v === undefined) ? fallback : v;
+            } catch (e) { return fallback; }
+        }
+        function lsSet(name, value) { try { localStorage.setItem(lsKey(name), JSON.stringify(value)); } catch (e) {} }
+        function clearExamData() { ['exam_v2', 'history_v4', 'wrong_v4'].forEach(n => { try { localStorage.removeItem(lsKey(n)); } catch (e) {} }); }
+
+        // Lịch sử và câu sai tự xóa sau 5 giờ
+        function loadHistory() { const now = Date.now(); return lsGet('history_v4', []).filter(h => h && (!h.timestamp || now - h.timestamp <= FIVE_HOURS)); }
+        function loadWrong() { const now = Date.now(); return lsGet('wrong_v4', []).filter(w => w && (!w.timestamp || now - w.timestamp <= FIVE_HOURS)); }
+
+        function escapeHTML(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        function loadExamState() {
+            const st = lsGet('exam_v2', null);
+            if (st && Array.isArray(st.used)) {
+                return { used: st.used, current: Array.isArray(st.current) ? st.current : null, done: st.done || 0 };
+            }
             return { used: [], current: null, done: 0 };
         }
 
-        function saveExamState(st) {
-            try { localStorage.setItem(EXAM_KEY, JSON.stringify(st)); } catch (e) {}
-        }
+        function saveExamState(st) { lsSet('exam_v2', st); }
 
         function shuffleArray(arr) {
             const a = [...arr];
@@ -471,9 +496,7 @@
             if (pool.length === 0) {
                 const ok = confirm(`Bạn đã thi thử hết ${dbData.length} câu hỏi rồi!\n\nBạn có muốn bắt đầu làm lại từ đầu không?\n(Các đề đã thi, lịch sử thi thử và danh sách câu sai trước đó sẽ bị xóa.)`);
                 if (!ok) return null;
-                localStorage.removeItem(EXAM_KEY);
-                localStorage.removeItem('pldc_history_v3');
-                localStorage.removeItem('pldc_wrong_v3');
+                clearExamData();
                 st = { used: [], current: null, done: 0 };
                 usedSet = new Set();
                 pool = [...dbData];
@@ -517,14 +540,16 @@
             
             userAnswers = {};
             currentQuestion = 0;
+            examSubmitted = false;
+            btnNext.disabled = false;
             resultsCard.style.display = 'none';
             quizCard.style.display = 'block';
 
             const examInfoEl = document.getElementById('exam-info');
             if (mode === 'exam') {
                 timerEl.style.display = 'block';
-                examInfoEl.textContent = examInfoText;
-                examInfoEl.style.display = 'block';
+                document.getElementById('exam-info-text').textContent = examInfoText;
+                examInfoEl.style.display = 'flex';
                 startTimerUp();
             } else {
                 timerEl.style.display = 'none';
@@ -640,7 +665,11 @@
         };
 
         window.submitExam = async () => {
+            if (examSubmitted) return; // chặn bấm "Nộp bài" nhiều lần → không lưu trùng
+            examSubmitted = true;
+            btnNext.disabled = true;
             clearInterval(examTimer);
+
             let score = 0;
             let currentWrong = [];
             
@@ -656,8 +685,10 @@
                 }
             });
 
+            const total = quizData.length;
             const timeStr = `${Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')}:${(elapsedSeconds % 60).toString().padStart(2, '0')}`;
-            let localName = currentUser ? currentUser.displayName : "Khách";
+            const localName = currentUser ? currentUser.displayName : "Khách";
+            const nowStr = new Date().toLocaleString('vi-VN');
             
             // Đánh dấu các câu của đề này là ĐÃ THI để đề sau bốc câu khác
             const examState = loadExamState();
@@ -668,42 +699,27 @@
             examState.done = (examState.done || 0) + 1;
             saveExamState(examState);
             const examNo = examState.done;
+            lastSubmittedExamNo = examNo;
             const remaining = dbData.filter(d => !usedSet.has(d.id)).length;
 
-            // Lịch sử và câu sai được giữ lại cho đến khi người dùng chọn làm lại từ đầu
-            let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
-            let savedWrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
-            
-            history.unshift({ date: new Date().toLocaleString('vi-VN'), score: score, total: quizData.length, time: timeStr, name: localName, examNo: examNo, timestamp: Date.now() });
-            localStorage.setItem('pldc_history_v3', JSON.stringify(history));
+            // Lịch sử + câu sai (chia theo số đề): chỉ lưu trên máy này, riêng từng tài khoản, tự xóa sau 5 giờ
+            const history = loadHistory();
+            history.unshift({ date: nowStr, score: score, total: total, time: timeStr, name: localName, examNo: examNo, timestamp: Date.now() });
+            lsSet('history_v4', history);
 
-            currentWrong.forEach(cw => {
-                cw.timestamp = Date.now();
-                let exists = savedWrong.find(w => w.q_text === cw.q_text);
-                if (!exists) savedWrong.unshift(cw);
-            });
-            localStorage.setItem('pldc_wrong_v3', JSON.stringify(savedWrong));
+            const newWrong = currentWrong.map(cw => ({ ...cw, examNo: examNo, date: nowStr, timestamp: Date.now() }));
+            const oldWrong = loadWrong().filter(w => w.examNo !== examNo);
+            lsSet('wrong_v4', [...newWrong, ...oldWrong]);
 
-            if (currentUser && isFirebaseActive) {
-                try {
-                    await addDoc(collection(db, "leaderboard"), {
-                        uid: currentUser.uid,
-                        name: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                        score: score,
-                        total: quizData.length,
-                        timeSeconds: elapsedSeconds,
-                        timeStr: timeStr,
-                        timestamp: serverTimestamp()
-                    });
-                } catch (e) {}
-            }
-
+            // Hiện kết quả ngay, việc gửi điểm lên bảng xếp hạng làm sau
             quizCard.style.display = 'none';
             resultsCard.style.display = 'block';
-            document.getElementById('score-display').textContent = `${score}/${quizData.length}`;
+            document.getElementById('score-display').textContent = `${score}/${total}`;
             
-            let msg = `Đề thi thử số ${examNo} · Sai ${currentWrong.length} câu (xem ở Xếp hạng & Lịch sử → Câu sai).<br>Đã thi ${examState.used.length}/${dbData.length} câu.`;
+            let msg = currentWrong.length > 0
+                ? `Đề thi thử số ${examNo} · Sai ${currentWrong.length} câu.`
+                : `Đề thi thử số ${examNo} · Bạn làm đúng hết!`;
+            msg += `<br>Đã thi ${examState.used.length}/${dbData.length} câu.`;
             const btnRestart = document.getElementById('btn-restart');
             if (remaining > 0) {
                 msg += ` Còn ${remaining} câu chưa thi.`;
@@ -712,11 +728,42 @@
                 msg += ' Bạn đã thi hết toàn bộ câu hỏi!';
                 btnRestart.textContent = 'Làm lại từ đầu';
             }
+            document.getElementById('btn-view-wrong').style.display = currentWrong.length > 0 ? '' : 'none';
             if(!currentUser && isFirebaseActive) msg += "<br><small style='color:var(--text)'>Đăng nhập để lưu điểm lên bảng xếp hạng.</small>";
             document.getElementById('result-message').innerHTML = msg;
+
+            if (currentUser && isFirebaseActive) {
+                try {
+                    await addDoc(collection(db, "leaderboard"), {
+                        uid: currentUser.uid,
+                        name: currentUser.displayName,
+                        photoURL: currentUser.photoURL,
+                        score: score,
+                        total: total,
+                        timeSeconds: elapsedSeconds,
+                        timeStr: timeStr,
+                        timestamp: serverTimestamp()
+                    });
+                } catch (e) { console.error("Lỗi lưu điểm:", e); }
+            }
         };
 
         window.restartQuiz = () => { window.switchMode(currentMode); };
+
+        // Mở thẳng tab "Câu sai" và cuộn tới đề vừa thi
+        window.showWrongTab = (examNo = lastSubmittedExamNo) => {
+            window.openModal('data-modal');
+            window.switchTab('wrong-tab', document.getElementById('tab-btn-wrong'), 'data-modal');
+            const target = examNo ? document.getElementById('wrong-exam-' + examNo) : null;
+            if (target) target.scrollIntoView({ block: 'start' });
+        };
+
+        // Làm lại toàn bộ đề thi thử: xóa tiến trình + lịch sử + câu sai của tài khoản đang dùng, bắt đầu lại từ Đề 1
+        window.resetAllExams = () => {
+            if (!confirm("Làm lại toàn bộ đề thi thử?\n\nTiến trình các đề đã thi, lịch sử thi thử và danh sách câu sai của tài khoản này sẽ bị xóa, bạn sẽ bắt đầu lại từ Đề 1.")) return;
+            clearExamData();
+            window.switchMode('exam');
+        };
 
         // --- TÍNH NĂNG ADMIN ---
         window.openAdminPanel = () => {
@@ -884,26 +931,38 @@
         };
 
         function renderLocalData() {
-            let history = JSON.parse(localStorage.getItem('pldc_history_v3')) || [];
-            let hHTML = history.length > 0 ? "" : "<p class='empty-state'>Chưa có dữ liệu.</p>";
+            const hint = `<p class="data-hint">Chỉ lưu trên máy này, riêng từng tài khoản, tự xóa sau 5 giờ.</p>`;
+
+            const history = loadHistory();
+            let hHTML = hint + (history.length > 0 ? "" : "<p class='empty-state'>Chưa có dữ liệu.</p>");
             history.forEach((h) => {
-                if(h) {
-                     hHTML += `<div class="history-item"><div class="lb-info"><span class="lb-name">${h.examNo ? "Đề " + h.examNo + " · " : ""}${h.name}</span><span class="lb-time">${h.date} - ${h.time}</span></div><div class="lb-score">${h.score}/${h.total}</div></div>`;
-                }
+                hHTML += `<div class="history-item"><div class="lb-info"><span class="lb-name">${h.examNo ? "Đề " + h.examNo + " · " : ""}${escapeHTML(h.name)}</span><span class="lb-time">${escapeHTML(h.date)} - ${escapeHTML(h.time)}</span></div><div class="lb-score">${h.score}/${h.total}</div></div>`;
             });
             document.getElementById('history-list').innerHTML = hHTML;
 
-            let wrong = JSON.parse(localStorage.getItem('pldc_wrong_v3')) || [];
-            let wHTML = wrong.length > 0 ? `<button class="simple-link" onclick="window.clearWrong()">Xóa danh sách</button>` : "<p class='empty-state'>Không có câu sai.</p>";
-            wrong.forEach((w) => {
-                if(w) {
-                     wHTML += `<div class="wrong-q-item"><div class="wrong-q-title">${w.q_text}</div><div class="wrong-q-user">Bỏ qua / Chọn sai: ${w.user_ans}</div><div class="wrong-q-correct">Đáp án đúng: ${w.correct_ans}</div></div>`;
-                }
-            });
+            // Câu sai: gom theo số đề, đề mới nhất lên trên
+            const wrong = loadWrong();
+            const groups = {};
+            wrong.forEach(w => { const k = w.examNo || 0; (groups[k] = groups[k] || []).push(w); });
+            const examNos = Object.keys(groups).map(Number).sort((x, y) => y - x);
+
+            let wHTML = hint;
+            if (examNos.length === 0) {
+                wHTML += "<p class='empty-state'>Không có câu sai.</p>";
+            } else {
+                wHTML += `<button class="simple-link" onclick="window.clearWrong()">Xóa danh sách</button>`;
+                examNos.forEach(k => {
+                    const items = groups[k];
+                    wHTML += `<div class="wrong-exam-header" id="wrong-exam-${k}">${k ? "Đề thi thử số " + k : "Câu sai"} · sai ${items.length} câu${items[0].date ? " · " + escapeHTML(items[0].date) : ""}</div>`;
+                    items.forEach(w => {
+                        wHTML += `<div class="wrong-q-item"><div class="wrong-q-title">${escapeHTML(w.q_text)}</div><div class="wrong-q-user">Bỏ qua / Chọn sai: ${escapeHTML(w.user_ans)}</div><div class="wrong-q-correct">Đáp án đúng: ${escapeHTML(w.correct_ans)}</div></div>`;
+                    });
+                });
+            }
             document.getElementById('wrong-list').innerHTML = wHTML;
         }
 
-        window.clearWrong = () => { if(confirm("Xóa dữ liệu câu sai?")) { localStorage.removeItem('pldc_wrong_v3'); renderLocalData(); } };
+        window.clearWrong = () => { if(confirm("Xóa danh sách câu sai?")) { lsSet('wrong_v4', []); renderLocalData(); } };
 
         async function fetchLeaderboard() {
             try {
@@ -911,7 +970,12 @@
                 const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(300));
                 const querySnapshot = await getDocs(q);
                 const rows = [];
-                querySnapshot.forEach((d) => rows.push(d.data()));
+                const seenKeys = new Set(); // bỏ các dòng trùng hệt nhau (cùng người, cùng điểm, cùng thời gian)
+                querySnapshot.forEach((d) => {
+                    const x = d.data();
+                    const key = [x.uid, x.score, x.total, x.timeSeconds].join('|');
+                    if (!seenKeys.has(key)) { seenKeys.add(key); rows.push(x); }
+                });
                 const pct = (d) => d.total ? d.score / d.total : 0;
                 rows.sort((a, b) => (pct(b) - pct(a)) || (a.timeSeconds - b.timeSeconds));
                 const topRows = rows.slice(0, 50);
@@ -920,7 +984,7 @@
                 let lbHTML = ""; let rank = 1;
                 topRows.forEach((data) => {
                     let rankClass = rank <= 3 ? `rank-${rank}` : '';
-                    lbHTML += `<div class="leaderboard-item"><div class="rank ${rankClass}">#${rank}</div><img src="${data.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTIlOGRmMCIvPjwvc3ZnPg=='}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover;"><div class="lb-info"><span class="lb-name">${data.name}</span><span class="lb-time">${data.timeStr}</span></div><div class="lb-score">${data.score}${data.total ? "/" + data.total : ""}</div></div>`;
+                    lbHTML += `<div class="leaderboard-item"><div class="rank ${rankClass}">#${rank}</div><img src="${escapeHTML(data.photoURL) || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTIlOGRmMCIvPjwvc3ZnPg=='}" style="width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover;"><div class="lb-info"><span class="lb-name">${escapeHTML(data.name)}</span><span class="lb-time">${escapeHTML(data.timeStr)}</span></div><div class="lb-score">${data.score}${data.total ? "/" + data.total : ""}</div></div>`;
                     rank++;
                 });
                 document.getElementById('leaderboard-list').innerHTML = lbHTML;
