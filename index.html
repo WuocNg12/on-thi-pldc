@@ -336,6 +336,7 @@
         let isShuffled = false;
         let examSubmitted = false;      // chặn nộp bài nhiều lần
         let lastSubmittedExamNo = 0;    // số đề vừa nộp (để nút "Xem câu sai" nhảy đúng đề)
+        let practiceUid = null;         // tài khoản mà tiến trình luyện tập đang được nạp
 
         const questionEl = document.getElementById('question');
         const optionsEl = document.getElementById('options');
@@ -383,6 +384,11 @@
                     }
                     // Mỗi tài khoản có tiến trình thi riêng: đang thi dở mà đổi tài khoản thì nạp lại đề của tài khoản đó
                     if (currentMode === 'exam' && !examSubmitted && dbData.length > 0) window.switchMode('exam');
+                    else if (currentMode === 'practice' && dbData.length > 0 && practiceUid !== (user ? user.uid : 'guest')) {
+                        // Đổi tài khoản khi đang luyện tập: nạp tiến trình của tài khoản đó (nếu chưa có thì giữ nguyên vị trí hiện tại)
+                        if (restorePracticeProgress(true)) loadQuestion();
+                        else savePracticeProgress();
+                    }
                 });
             }
         } catch (e) { console.error(e); }
@@ -432,7 +438,8 @@
                     loadQuestion();
                 } else {
                     quizData = [...dbData];
-                    if(isShuffled) window.toggleShuffle(true); // Giữ nguyên state đảo câu hỏi nếu đang bật
+                    if (restorePracticeProgress(true)) loadQuestion(); // Mở lại web / vừa sửa câu hỏi: làm tiếp đúng chỗ đang dở
+                    else if(isShuffled) window.toggleShuffle(true); // Giữ nguyên state đảo câu hỏi nếu đang bật
                     else loadQuestion();
                 }
                 
@@ -475,6 +482,47 @@
         }
 
         function saveExamState(st) { lsSet('exam_v2', st); }
+
+        // --- LƯU / KHÔI PHỤC TIẾN TRÌNH LUYỆN TẬP (riêng từng tài khoản, thoát web hay đổi chế độ vẫn làm tiếp) ---
+        function savePracticeProgress() {
+            if (currentMode !== 'practice' || quizData.length === 0 || !quizData[currentQuestion]) return;
+            practiceUid = currentUser ? currentUser.uid : 'guest';
+            lsSet('practice_v1', {
+                shuffled: isShuffled,
+                ids: isShuffled ? quizData.map(q => q.id) : null, // chỉ cần lưu thứ tự khi đang đảo câu
+                qid: quizData[currentQuestion].id,
+                index: currentQuestion
+            });
+        }
+
+        // adoptShuffle = true: lấy luôn trạng thái "Đảo câu hỏi" đã lưu (khi mở web / đổi tài khoản)
+        // adoptShuffle = false: chỉ khôi phục nếu trạng thái đảo câu hiện tại trùng với lúc đã lưu
+        function restorePracticeProgress(adoptShuffle) {
+            practiceUid = currentUser ? currentUser.uid : 'guest';
+            const st = lsGet('practice_v1', null);
+            if (!st || dbData.length === 0) return false;
+            if (!adoptShuffle && !!st.shuffled !== isShuffled) return false;
+
+            let list;
+            if (st.shuffled && Array.isArray(st.ids)) {
+                const byId = new Map(dbData.map(d => [d.id, d]));
+                list = st.ids.map(id => byId.get(id)).filter(Boolean); // bỏ câu đã bị xóa
+                const inList = new Set(list.map(d => d.id));
+                list = list.concat(dbData.filter(d => !inList.has(d.id))); // câu mới thêm đặt ở cuối
+            } else {
+                list = [...dbData];
+            }
+            if (list.length === 0) return false;
+
+            let idx = st.qid ? list.findIndex(d => d.id === st.qid) : -1;
+            if (idx < 0) idx = Math.min(Math.max(parseInt(st.index) || 0, 0), list.length - 1);
+
+            quizData = list;
+            currentQuestion = idx;
+            isShuffled = !!st.shuffled;
+            btnShuffle.classList.toggle('active', isShuffled);
+            return true;
+        }
 
         function shuffleArray(arr) {
             const a = [...arr];
@@ -525,13 +573,15 @@
         window.switchMode = (mode) => {
             if(dbData.length === 0) return;
 
+            let startIndex = 0;
             if (mode === 'exam') {
                 const examSet = prepareExam();
                 if (examSet === null) mode = 'practice'; // Không muốn làm lại → quay về Luyện tập
                 else quizData = examSet;
             }
             if (mode === 'practice') {
-                quizData = isShuffled ? shuffleArray(dbData) : [...dbData];
+                if (restorePracticeProgress(false)) startIndex = currentQuestion; // làm tiếp câu đang dở
+                else quizData = isShuffled ? shuffleArray(dbData) : [...dbData];
             }
 
             currentMode = mode;
@@ -539,7 +589,7 @@
             document.getElementById('btn-exam').classList.toggle('active', mode === 'exam');
             
             userAnswers = {};
-            currentQuestion = 0;
+            currentQuestion = startIndex;
             examSubmitted = false;
             btnNext.disabled = false;
             resultsCard.style.display = 'none';
@@ -607,6 +657,8 @@
             } else {
                 btnNext.textContent = 'Tiếp tục';
             }
+
+            savePracticeProgress(); // chỉ có tác dụng khi đang ở chế độ Luyện tập
         }
 
         window.handlePracticeClick = (btn, selectedIndex, correctIndex) => {
